@@ -1,0 +1,17 @@
+{
+  "name": "JEC Barber",
+  "short_name": "JEC Barber",
+  "description": "Gestión de barbería — reservas, clientes y panel admin.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/images/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

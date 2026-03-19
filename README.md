@@ -1,20 +1,64 @@
 # JEC Barber — Frontend
 
-Solo la aplicación web (React + Vite). Código de API, base de datos u otros servicios vive en otros repositorios o carpetas.
+Aplicación web en **React** (interfaz y estado con componentes y hooks). El API real será un **backend Spring Boot**; este front se enlaza con `VITE_API_URL` (ver `.env.example`).
 
-## Estructura del proyecto
+### Stack de frontend (React)
+
+| Pieza | Uso en este repo |
+|--------|-------------------|
+| **React 19** | UI declarativa (`src/components`, hooks). |
+| **Vite** | Dev server, HMR y build (`npm run dev` / `build`). |
+| **React Router** | Rutas y vistas por rol (`src/App.jsx`). |
+| **Tailwind CSS v4** | Estilos en JSX + `src/styles/main.css`. |
+| **Lucide React** | Iconos. |
+
+### Integración con Spring Boot
+
+- **URL base**: suele ser algo como `http://localhost:8080/api` si usas puerto por defecto y un prefijo común en los `@RestController` o `server.servlet.context-path`.
+- **CORS**: en Spring habilita orígenes del front (p. ej. `http://localhost:5173` en desarrollo) con `WebMvcConfigurer` + `addCorsMappings` o un `CorsConfigurationSource` si usas seguridad.
+- **JSON**: conviene que los DTOs del backend coincidan en nombre de campos con lo que ya modela el front (`src/types/domain.js`, listas del admin) para no mapear a mano.
+- **Auth**: cuando sustituyas el mock de login, lo habitual es **JWT** (cabecera `Authorization: Bearer …`) o **sesión con cookie** (`credentials: 'include'` en `fetch`). Guarda el token o deja que el navegador envíe la cookie según elijas.
+- **Implementación en el front**: centraliza las llamadas en `src/services/api.js` (o divide por dominio) usando `getApiBaseUrl()` y `fetch`; los mocks actuales son el lugar lógico a reemplazar.
+
+## Estructura principal
 
 | Ruta | Uso |
 |------|-----|
-| `public/images/` | Estáticos por URL (`/images/...`). Por ejemplo el favicon. |
-| `src/styles/` | CSS global (Tailwind, `@theme`, utilidades). Punto de entrada: `main.css`. |
-| `src/components/` | Componentes React por pantalla o dominio. |
-| `src/App.jsx`, `src/main.jsx` | Raíz de la app y montaje en el DOM. |
+| `public/images/` | Estáticos por URL (`/images/...`). |
+| `public/manifest.webmanifest` | Manifest ligero (instalable / PWA básica). |
+| `src/styles/main.css` | Tailwind, tema y utilidades globales. |
+| `src/App.jsx` | Rutas (`react-router-dom`). |
+| `src/context/` | `AuthProvider`, instancia de contexto de sesión. |
+| `src/hooks/` | `useAuth`, `useListFilterPagination`, etc. |
+| `src/services/api.js` | Mocks y `getApiBaseUrl()`; sustituir por `fetch` al backend. |
+| `src/types/domain.js` | JSDoc de dominio (citas, clientes, roles…). |
+| `src/utils/validations.js` | Validaciones reutilizables (+ tests). |
+| `src/components/ui/` | `LoadingSpinner`, `ErrorBanner`, `EmptyState`, `ConfirmDialog`, `PaginationBar`. |
+| `src/components/admin/` | Panel administrativo (pestañas, CSV, datos mock). |
+| `src/config/adminEnv.js` | Flags `VITE_ADMIN_READONLY`, `VITE_ENABLE_HISTORIAL`. |
 
-Archivos de configuración en la raíz (`vite.config.js`, `eslint.config.js`, `postcss.config.js`, `index.html`) son propios del front.
+## Variables de entorno del panel admin
+
+En `.env` o `.env.local` (ver `.env.example`):
+
+- **`VITE_ADMIN_READONLY=true`** — oculta formularios y acciones de edición en el panel (demo de rol restringido).
+- **`VITE_ENABLE_HISTORIAL=false`** — oculta la pestaña **Historial** de citas (por defecto la pestaña está visible).
+
+El admin usa `?tab=resumen` (u otra pestaña) en la URL para compartir o refrescar la vista. Atajos **1–9** cambian de pestaña cuando el foco no está en un campo de texto; **`/`** abre la búsqueda rápida.
+
+## Rutas
+
+- `/login` — inicio de sesión (demo: contraseña `12345678`).
+- `/admin`, `/cliente`, `/barbero` — vistas por rol (protegidas).
+- `/` — redirige según sesión o a `/login`.
+
+La última pestaña activa del admin se guarda en `sessionStorage` (`jecbarber_admin_tab`). La vista compacta se guarda en `localStorage` (`jecbarber_admin_compact`).
 
 ## Scripts
 
 - `npm run dev` — desarrollo
 - `npm run build` — producción
 - `npm run preview` — vista previa del build
+- `npm run lint` — ESLint (+ Prettier vía `eslint-config-prettier`)
+- `npm run test` / `npm run test:run` — Vitest + Testing Library
+- `npm run format` — Prettier
