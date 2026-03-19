@@ -1,5 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import { isFechaInRange, filterGastosByDateRange, parseHoraToMinutes } from './adminFilters';
+import {
+  addDaysIso,
+  isFechaInRange,
+  filterGastosByDateRange,
+  parseHoraToMinutes,
+} from './adminFilters';
+
+describe('addDaysIso', () => {
+  it('suma días en el mismo mes', () => {
+    expect(addDaysIso('2026-03-19', 1)).toBe('2026-03-20');
+    expect(addDaysIso('2026-03-19', 13)).toBe('2026-04-01');
+  });
+});
 
 describe('isFechaInRange', () => {
   it('sin límites acepta todo', () => {

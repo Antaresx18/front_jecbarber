@@ -59,5 +59,8 @@ export async function loginWithMock(email, password, rolSeleccionado) {
   if (rolSeleccionado === 'BARBERO') {
     base.barberoId = 1;
   }
+  if (rolSeleccionado === 'CLIENTE') {
+    base.clienteId = 1;
+  }
   return base;
 }

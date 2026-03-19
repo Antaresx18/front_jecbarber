@@ -29,3 +29,17 @@
 .custom-progress-shine {
   animation: progress-shine 2s infinite linear;
 }
+
+@keyframes cliente-rango-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.cliente-rango-shimmer {
+  background-size: 200% auto;
+  animation: cliente-rango-shimmer 4s ease infinite;
+}

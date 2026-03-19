@@ -1,4 +1,5 @@
 import { escapeCsvCell, downloadCsvString } from '../../utils/csvUtils';
+import { mapRangoPorClienteId } from './rangoClienteUi';
 
 function buildAndDownload(headers, rows, filename) {
   const lines = [headers.join(','), ...rows.map((r) => r.map(escapeCsvCell).join(','))];
@@ -21,6 +22,16 @@ export function downloadInventarioCsv(items) {
   );
 }
 
+/** @param {{ id: number, barberoId: number, nombre: string, stock: number, stockMinimo: number }[]} items */
+export function downloadInventarioBarberosCsv(items, barberos) {
+  const nombreBarbero = (id) => barberos.find((b) => b.id === id)?.nombre ?? String(id);
+  buildAndDownload(
+    ['id', 'barbero', 'producto', 'stock', 'stockMinimo'],
+    items.map((i) => [i.id, nombreBarbero(i.barberoId), i.nombre, i.stock, i.stockMinimo]),
+    `inventario_barberos_${new Date().toISOString().slice(0, 10)}.csv`
+  );
+}
+
 export function downloadServiciosCsv(servicios) {
   buildAndDownload(
     ['id', 'nombre', 'precio', 'duracion', 'activo'],
@@ -37,16 +48,30 @@ export function downloadBarberosCsv(barberos) {
   );
 }
 
-export function downloadHistorialCitasCsv(citas) {
+export function downloadHistorialCitasCsv(citas, clientes = []) {
+  const rangoMap = mapRangoPorClienteId(clientes);
   buildAndDownload(
-    ['id', 'fecha', 'hora', 'cliente', 'barbero', 'servicio', 'estado', 'monto'],
+    [
+      'id',
+      'fecha',
+      'hora',
+      'cliente',
+      'rango_cliente',
+      'barbero',
+      'servicio',
+      'pedido_cliente',
+      'estado',
+      'monto',
+    ],
     citas.map((c) => [
       c.id,
       c.fecha,
       c.hora,
       c.clienteNombre,
+      rangoMap.get(c.clienteId) ?? '',
       c.barberoNombre,
       c.servicio,
+      c.pedidoCliente ?? '',
       c.estado,
       c.monto,
     ]),

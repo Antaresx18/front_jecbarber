@@ -50,10 +50,12 @@ El admin usa `?tab=resumen` (u otra pestaña) en la URL para compartir o refresc
 
 | Rol | Ruta | Qué verás |
 |-----|------|-----------|
-| **Barbero** | `/barbero` | Agenda de **hoy** solo para tu barbero (mock: sesión con `barberoId`) y un bloque de **historial reciente** filtrado igual. |
-| **Admin** | `/admin` → pestaña **Resumen** | Bloque **Citas de hoy**: todas las citas; puedes filtrar por barbero, estado y ordenar por hora. |
-| **Admin** | `/admin` → pestaña **Historial** | Citas pasadas con filtros por fecha, barbero y estado (+ export CSV). |
-| **Cliente** | `/cliente` | Vista simplificada (próxima cita mock); la agenda completa del negocio no aplica aquí. |
+| **Barbero** | `/barbero` | **Agenda** (14 días), **Inventario** privado, **Finanzas** (rango de fechas, total facturado, comisión % y detalle por servicio; mezcla historial mock + citas completadas en agenda). Datos en `adminData` + `barberoId` en la sesión. |
+| **Admin** | `/admin` → **Resumen** | **Citas de hoy** (solo `fecha === MOCK_HOY`): filtro por barbero, estado, notas. |
+| **Admin** | `/admin` → **Inventario** | Stock **general del salón**. |
+| **Admin** | `/admin` → **Stock barberos** | Inventario **privado de cada barbero** (lectura/ajuste mock, CSV). |
+| **Admin** | `/admin` → **Historial** | Citas pasadas con filtros (+ export CSV). |
+| **Cliente** | `/cliente` | **Inicio** (hero visual de rangos Bronce/Plata/Oro, próxima cita, recompensas), **Reservar** (formulario mock → `sessionStorage` + lista en **Mis citas**), **Mis citas** (mock + reservas locales), **Historial**. Sesión con `clienteId` (p. ej. 1). |
 
 ## Rutas
 

@@ -1,4 +1,19 @@
 /**
+ * Suma días a una fecha YYYY-MM-DD (calendario local).
+ * @param {string} fechaYmd
+ * @param {number} deltaDays
+ * @returns {string}
+ */
+export function addDaysIso(fechaYmd, deltaDays) {
+  const [y, m, d] = fechaYmd.split('-').map(Number);
+  const date = new Date(y, m - 1, d + deltaDays);
+  const yy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yy}-${mm}-${dd}`;
+}
+
+/**
  * @param {string} fecha ISO YYYY-MM-DD
  * @param {string} desde YYYY-MM-DD
  * @param {string} hasta YYYY-MM-DD

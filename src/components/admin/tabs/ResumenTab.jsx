@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import EmptyState from '../../ui/EmptyState';
 import { parseHoraToMinutes } from '../../../utils/adminFilters';
+import { MOCK_HOY } from '../adminData';
+import { rangoClass, rangoLabel } from '../rangoClienteUi';
 
 export default function ResumenTab({
   stats,
@@ -27,6 +29,7 @@ export default function ResumenTab({
   onUpdateCitaNotas,
   readOnly,
   compact,
+  rangoPorClienteId,
 }) {
   const [filtroBarbero, setFiltroBarbero] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
@@ -144,6 +147,7 @@ export default function ResumenTab({
               <Clock className="text-brand-accent" aria-hidden />
               Citas de hoy
             </h3>
+            <p className="text-xs text-slate-500 mt-1 font-mono">Día mock: {MOCK_HOY}</p>
             <div className="flex flex-wrap gap-2">
               <select
                 value={filtroBarbero}
@@ -180,17 +184,43 @@ export default function ResumenTab({
             <EmptyState title="Nada que mostrar" hint="Cambia filtros o estados de citas." />
           ) : (
             <div className="space-y-3">
-              {citasFiltradas.map((cita) => (
+              {citasFiltradas.map((cita) => {
+                const rangoCli = rangoLabel(rangoPorClienteId, cita.clienteId);
+                return (
                 <div
                   key={cita.id}
                   className="bg-slate-900/50 border border-slate-700/50 p-4 rounded-xl flex flex-col gap-3"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div>
-                      <h4 className="font-bold text-white text-lg">{cita.clienteNombre}</h4>
+                    <div className="min-w-0 space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="font-bold text-white text-lg">{cita.clienteNombre}</h4>
+                        {rangoCli ? (
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full border ${rangoClass(rangoCli)}`}
+                            title="Rango del cliente"
+                          >
+                            {rangoCli}
+                          </span>
+                        ) : null}
+                      </div>
                       <p className="text-sm text-slate-400">
-                        {cita.hora} • {cita.servicio} ({cita.barberoNombre})
+                        {cita.hora} · {cita.barberoNombre}
                       </p>
+                      <div className="rounded-lg bg-slate-950/60 border border-slate-700/80 px-3 py-2">
+                        <p className="text-[10px] font-black uppercase tracking-wider text-brand-accent">
+                          Lo que pidió el cliente
+                        </p>
+                        <p className="text-sm text-slate-200 mt-1 leading-snug">
+                          {(cita.pedidoCliente ?? '').trim() || cita.servicio}
+                        </p>
+                        {(cita.pedidoCliente ?? '').trim() ? (
+                          <p className="text-xs text-slate-500 mt-1">
+                            Servicio reservado:{' '}
+                            <span className="text-slate-400">{cita.servicio}</span>
+                          </p>
+                        ) : null}
+                      </div>
                     </div>
                     <div className="flex items-center gap-4 shrink-0">
                       <span className="font-bold text-emerald-400">${cita.monto.toFixed(2)}</span>
@@ -224,7 +254,8 @@ export default function ResumenTab({
                     </label>
                   )}
                 </div>
-              ))}
+              );
+              })}
             </div>
           )}
         </div>

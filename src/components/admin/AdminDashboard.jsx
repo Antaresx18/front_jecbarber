@@ -6,6 +6,7 @@ import {
   Scissors,
   Award,
   Package,
+  Briefcase,
   Wallet,
   Calendar,
 } from 'lucide-react';
@@ -17,6 +18,7 @@ import ServiciosTab from './tabs/ServiciosTab';
 import BarberosTab from './tabs/BarberosTab';
 import FinanzasTab from './tabs/FinanzasTab';
 import InventarioTab from './tabs/InventarioTab';
+import StockBarberosTab from './tabs/StockBarberosTab';
 import HistorialTab from './tabs/HistorialTab';
 import { downloadGastosCsv } from './exportCsv';
 import {
@@ -24,8 +26,10 @@ import {
   INITIAL_GASTOS,
   INITIAL_CLIENTES,
   INITIAL_SERVICIOS,
-  INITIAL_CITAS,
+  CITAS_AGENDA_COMPLETA,
+  MOCK_HOY,
   INITIAL_INVENTARIO,
+  INITIAL_INVENTARIO_BARBERO,
   INITIAL_HISTORIAL_CITAS,
   CHART_DAY_REVENUE_USD,
   STATS_MES_ANTERIOR_MOCK,
@@ -35,6 +39,7 @@ import AdminPanelSkeleton from '../ui/LoadingSkeleton';
 import ErrorBanner from '../ui/ErrorBanner';
 import { parsePrecio, parseComisionPercent } from '../../utils/validations';
 import { adminReadOnly, enableHistorialTab } from '../../config/adminEnv';
+import { mapRangoPorClienteId } from './rangoClienteUi';
 
 const ADMIN_TAB_KEY = 'jecbarber_admin_tab';
 const COMPACT_KEY = 'jecbarber_admin_compact';
@@ -45,6 +50,7 @@ const BASE_TAB_CONFIG = [
   { id: 'servicios', label: 'Catálogo', Icon: Scissors },
   { id: 'barberos', label: 'Barberos', Icon: Award },
   { id: 'inventario', label: 'Inventario', Icon: Package },
+  { id: 'stock_barberos', label: 'Stock barberos', Icon: Briefcase },
   { id: 'finanzas', label: 'Finanzas', Icon: Wallet },
 ];
 
@@ -84,9 +90,17 @@ export default function AdminDashboard() {
   const [gastos, setGastos] = useState(INITIAL_GASTOS);
   const [clientes, setClientes] = useState(INITIAL_CLIENTES);
   const [servicios, setServicios] = useState(INITIAL_SERVICIOS);
-  const [citasHoy, setCitasHoy] = useState(INITIAL_CITAS);
+  const [citasAgenda, setCitasAgenda] = useState(CITAS_AGENDA_COMPLETA);
   const [inventario, setInventario] = useState(INITIAL_INVENTARIO);
+  const [inventarioBarberos, setInventarioBarberos] = useState(INITIAL_INVENTARIO_BARBERO);
   const [historialCitas, setHistorialCitas] = useState(INITIAL_HISTORIAL_CITAS);
+
+  const citasHoy = useMemo(
+    () => citasAgenda.filter((c) => c.fecha === MOCK_HOY),
+    [citasAgenda]
+  );
+
+  const rangoPorClienteId = useMemo(() => mapRangoPorClienteId(clientes), [clientes]);
 
   const [compactMode, setCompactMode] = useState(() => {
     try {
@@ -103,8 +117,9 @@ export default function AdminDashboard() {
     servicio: maxId(INITIAL_SERVICIOS),
     gasto: maxId(INITIAL_GASTOS),
     inventario: maxId(INITIAL_INVENTARIO),
+    inventarioBarbero: maxId(INITIAL_INVENTARIO_BARBERO),
     barbero: maxId(INITIAL_BARBEROS),
-    cita: maxId(INITIAL_CITAS),
+    cita: maxId(CITAS_AGENDA_COMPLETA),
     historial: maxId(INITIAL_HISTORIAL_CITAS),
   });
 
@@ -297,31 +312,32 @@ export default function AdminDashboard() {
   }, []);
 
   const updateCitaNotas = useCallback((id, notas) => {
-    setCitasHoy((prev) => prev.map((c) => (c.id === id ? { ...c, notas } : c)));
+    setCitasAgenda((prev) => prev.map((c) => (c.id === id ? { ...c, notas } : c)));
   }, []);
 
   const handleCompletarCita = useCallback(
     (idcita) => {
-      const citaIndex = citasHoy.findIndex((c) => c.id === idcita);
-      if (citaIndex === -1 || citasHoy[citaIndex].estado === 'Completada') return;
+      const citaIndex = citasAgenda.findIndex((c) => c.id === idcita);
+      if (citaIndex === -1 || citasAgenda[citaIndex].estado === 'Completada') return;
 
-      const cita = citasHoy[citaIndex];
+      const cita = citasAgenda[citaIndex];
 
-      setCitasHoy(
-        citasHoy.map((c, i) => (i === citaIndex ? { ...c, estado: 'Completada' } : c))
+      setCitasAgenda(
+        citasAgenda.map((c, i) => (i === citaIndex ? { ...c, estado: 'Completada' } : c))
       );
 
       const hid = ++idsRef.current.historial;
       setHistorialCitas((prev) => [
         {
           id: hid,
-          fecha: new Date().toISOString().slice(0, 10),
+          fecha: cita.fecha || MOCK_HOY,
           hora: cita.hora,
           clienteId: cita.clienteId,
           barberoId: cita.barberoId,
           clienteNombre: cita.clienteNombre,
           barberoNombre: cita.barberoNombre,
           servicio: cita.servicio,
+          pedidoCliente: cita.pedidoCliente,
           estado: 'Completada',
           monto: cita.monto,
         },
@@ -357,7 +373,7 @@ export default function AdminDashboard() {
         );
       }
     },
-    [citasHoy, clientes, barberos]
+    [citasAgenda, clientes, barberos]
   );
 
   const ajustarCortesCliente = useCallback((id, cantidad) => {
@@ -397,6 +413,22 @@ export default function AdminDashboard() {
         ),
     });
   }, [inventario]);
+
+  const adjustInventarioBarberoStock = useCallback((id, delta) => {
+    const item = inventarioBarberos.find((i) => i.id === id);
+    if (!item) return;
+    const prevStock = item.stock;
+    setInventarioBarberos((items) =>
+      items.map((it) => (it.id === id ? { ...it, stock: Math.max(0, it.stock + delta) } : it))
+    );
+    setToast({
+      message: 'Stock barbero actualizado',
+      onUndo: () =>
+        setInventarioBarberos((prev) =>
+          prev.map((it) => (it.id === id ? { ...it, stock: prevStock } : it))
+        ),
+    });
+  }, [inventarioBarberos]);
 
   const startEditServicio = useCallback((s) => {
     setEditingServicioId(s.id);
@@ -530,6 +562,7 @@ export default function AdminDashboard() {
             onUpdateCitaNotas={updateCitaNotas}
             readOnly={readOnly}
             compact={compactMode}
+            rangoPorClienteId={rangoPorClienteId}
           />
         )}
       </div>
@@ -626,6 +659,23 @@ export default function AdminDashboard() {
 
       <div
         role="tabpanel"
+        id="admin-panel-stock_barberos"
+        aria-labelledby="admin-tab-stock_barberos"
+        hidden={activeTab !== 'stock_barberos'}
+      >
+        {activeTab === 'stock_barberos' && (
+          <StockBarberosTab
+            barberos={barberos}
+            items={inventarioBarberos}
+            onAdjustStock={adjustInventarioBarberoStock}
+            readOnly={readOnly}
+            compact={compactMode}
+          />
+        )}
+      </div>
+
+      <div
+        role="tabpanel"
         id="admin-panel-finanzas"
         aria-labelledby="admin-tab-finanzas"
         hidden={activeTab !== 'finanzas'}
@@ -655,6 +705,8 @@ export default function AdminDashboard() {
             <HistorialTab
               citas={historialCitas}
               barberos={barberos}
+              clientes={clientes}
+              rangoPorClienteId={rangoPorClienteId}
               compact={compactMode}
               onExport={() => setToast({ message: 'Historial exportado' })}
             />

@@ -4,12 +4,7 @@ import { useListFilterPagination } from '../../../hooks/useListFilterPagination'
 import PaginationBar from '../../ui/PaginationBar';
 import EmptyState from '../../ui/EmptyState';
 import { downloadClientesCsv } from '../adminExports';
-
-function rangoClass(rango) {
-  if (rango === 'Oro') return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-  if (rango === 'Plata') return 'bg-slate-300/20 text-slate-300 border-slate-300/30';
-  return 'bg-orange-700/20 text-orange-400 border-orange-700/30';
-}
+import { rangoClass } from '../rangoClienteUi';
 
 export default function ClientesTab({
   clientes,

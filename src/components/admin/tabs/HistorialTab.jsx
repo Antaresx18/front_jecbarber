@@ -5,8 +5,9 @@ import PaginationBar from '../../ui/PaginationBar';
 import EmptyState from '../../ui/EmptyState';
 import { downloadHistorialCitasCsv } from '../adminExports';
 import { isFechaInRange } from '../../../utils/adminFilters';
+import { rangoClass, rangoLabel } from '../rangoClienteUi';
 
-export default function HistorialTab({ citas, barberos, compact, onExport }) {
+export default function HistorialTab({ citas, barberos, clientes, rangoPorClienteId, compact, onExport }) {
   const [desde, setDesde] = useState('');
   const [hasta, setHasta] = useState('');
   const [barberoId, setBarberoId] = useState('');
@@ -21,10 +22,14 @@ export default function HistorialTab({ citas, barberos, compact, onExport }) {
     });
   }, [citas, desde, hasta, barberoId, estado]);
 
-  const matches = useCallback((c, q) => {
-    const n = `${c.clienteNombre} ${c.barberoNombre} ${c.servicio} ${c.estado}`.toLowerCase();
-    return n.includes(q);
-  }, []);
+  const matches = useCallback(
+    (c, q) => {
+      const r = rangoLabel(rangoPorClienteId, c.clienteId) ?? '';
+      const n = `${c.clienteNombre} ${c.barberoNombre} ${c.servicio} ${c.pedidoCliente ?? ''} ${c.estado} ${r}`.toLowerCase();
+      return n.includes(q);
+    },
+    [rangoPorClienteId]
+  );
 
   const { query, setQuery, page, setPage, totalPages, pageItems, filteredCount } =
     useListFilterPagination(filteredByMeta, matches, 6);
@@ -76,7 +81,7 @@ export default function HistorialTab({ citas, barberos, compact, onExport }) {
           <button
             type="button"
             onClick={() => {
-              downloadHistorialCitasCsv(filteredByMeta);
+              downloadHistorialCitasCsv(filteredByMeta, clientes);
               onExport?.();
             }}
             className="flex items-center justify-center gap-2 py-2 rounded-lg bg-brand-accent text-brand-dark text-sm font-black hover:brightness-110"
@@ -106,7 +111,9 @@ export default function HistorialTab({ citas, barberos, compact, onExport }) {
             {filteredCount} cita{filteredCount !== 1 ? 's' : ''} (página {page} de {totalPages})
           </p>
           <div className="space-y-2">
-            {pageItems.map((c) => (
+            {pageItems.map((c) => {
+              const rangoCli = rangoLabel(rangoPorClienteId, c.clienteId);
+              return (
               <div
                 key={c.id}
                 className={`glass-panel flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 ${dense}`}
@@ -114,11 +121,26 @@ export default function HistorialTab({ citas, barberos, compact, onExport }) {
                 <div className="flex items-start gap-3 min-w-0">
                   <Calendar className="text-brand-gold shrink-0 mt-0.5" size={18} aria-hidden />
                   <div className="min-w-0">
-                    <p className="font-bold text-white truncate">{c.clienteNombre}</p>
+                    <div className="flex flex-wrap items-center gap-2 min-w-0">
+                      <p className="font-bold text-white truncate">{c.clienteNombre}</p>
+                      {rangoCli ? (
+                        <span
+                          className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border shrink-0 ${rangoClass(rangoCli)}`}
+                        >
+                          {rangoCli}
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="text-slate-400 text-sm">
                       {c.fecha} · {c.hora} · {c.barberoNombre}
                     </p>
                     <p className="text-brand-accent text-xs font-semibold uppercase mt-0.5">{c.servicio}</p>
+                    {(c.pedidoCliente ?? '').trim() !== '' && (
+                      <p className="text-slate-500 text-xs mt-1 leading-snug border-l-2 border-slate-600 pl-2">
+                        <span className="text-slate-600 font-bold">Pedido: </span>
+                        {c.pedidoCliente}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
@@ -136,7 +158,8 @@ export default function HistorialTab({ citas, barberos, compact, onExport }) {
                   <span className="font-bold text-emerald-400">${Number(c.monto).toFixed(2)}</span>
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
           <PaginationBar page={page} totalPages={totalPages} onPageChange={setPage} />
         </>
