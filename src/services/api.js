@@ -50,9 +50,14 @@ export async function loginWithMock(email, password, rolSeleccionado) {
     BARBERO: 'Kevin Barbero',
     CLIENTE: 'Jorge',
   };
-  return {
+  /** @type {import('../types/domain.js').UsuarioSesion} */
+  const base = {
     rol: rolSeleccionado,
     nombre: nombres[rolSeleccionado] || 'Usuario',
     email: email.trim(),
   };
+  if (rolSeleccionado === 'BARBERO') {
+    base.barberoId = 1;
+  }
+  return base;
 }

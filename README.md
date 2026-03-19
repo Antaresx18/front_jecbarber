@@ -46,6 +46,15 @@ En `.env` o `.env.local` (ver `.env.example`):
 
 El admin usa `?tab=resumen` (u otra pestaña) en la URL para compartir o refrescar la vista. Atajos **1–9** cambian de pestaña cuando el foco no está en un campo de texto; **`/`** abre la búsqueda rápida.
 
+## Dónde se ven las citas
+
+| Rol | Ruta | Qué verás |
+|-----|------|-----------|
+| **Barbero** | `/barbero` | Agenda de **hoy** solo para tu barbero (mock: sesión con `barberoId`) y un bloque de **historial reciente** filtrado igual. |
+| **Admin** | `/admin` → pestaña **Resumen** | Bloque **Citas de hoy**: todas las citas; puedes filtrar por barbero, estado y ordenar por hora. |
+| **Admin** | `/admin` → pestaña **Historial** | Citas pasadas con filtros por fecha, barbero y estado (+ export CSV). |
+| **Cliente** | `/cliente` | Vista simplificada (próxima cita mock); la agenda completa del negocio no aplica aquí. |
+
 ## Rutas
 
 - `/login` — inicio de sesión (demo: contraseña `12345678`).

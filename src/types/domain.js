@@ -7,6 +7,7 @@
  * @property {RolUsuario} rol
  * @property {string} nombre
  * @property {string} [email]
+ * @property {number} [barberoId] — mock BARBERO: id del profesional en datos admin
  */
 
 /**

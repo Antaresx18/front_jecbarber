@@ -71,6 +71,18 @@ export const INITIAL_CITAS = [
     monto: 15.0,
     notas: 'Cliente VIP',
   },
+  {
+    id: 3,
+    clienteId: 3,
+    barberoId: 1,
+    clienteNombre: 'Miguel Torres',
+    barberoNombre: 'Kevin Barbero',
+    servicio: 'Limpieza Facial',
+    hora: '03:45 PM',
+    estado: 'Pendiente',
+    monto: 20.0,
+    notas: '',
+  },
 ];
 
 /** Citas pasadas (historial) — mock. */
