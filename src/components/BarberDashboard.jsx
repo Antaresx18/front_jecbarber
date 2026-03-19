@@ -1,4 +1,3 @@
-import React from 'react';
 import { Calendar, Clock, CheckCircle2, User, MoreHorizontal } from 'lucide-react';
 
 export default function BarberDashboard() {

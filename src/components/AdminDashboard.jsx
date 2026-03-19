@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  DollarSign, Scissors, Users, User, AlertTriangle, TrendingUp, 
-  Package, Percent, Edit2, Save, Wallet, ArrowDownCircle, 
-  ArrowUpCircle, Plus, Trash2, PieChart, CheckCircle, Download, Star, Award, Clock
+import { useState, useEffect } from 'react';
+import {
+  DollarSign, Scissors, Users, User, TrendingUp,
+  Package, Percent, Edit2, Save, Wallet, ArrowDownCircle,
+  ArrowUpCircle, Trash2, CheckCircle, Download, Award, Clock,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -18,13 +18,7 @@ export default function AdminDashboard() {
     { id: 3, nombre: "Andrés Fade", porcentaje: 60, cortesRealizados: 30 }
   ]);
   
-  const [inventario, setInventario] = useState([
-    { id: 1, nombre: "Cera Mate Texturizante", precio: 15.00, stock: 2 },
-    { id: 2, nombre: "Tónico Capilar Crecimiento", precio: 25.50, stock: 1 },
-    { id: 3, nombre: "Afeitadora de Precisión", precio: 12.00, stock: 5 }
-  ]);
-  
-  const [gastos, setGastos] = useState([
+  const [gastos] = useState([
     { id: 1, concepto: "Alquiler Local", monto: 1200.00, categoria: "Fijo", fecha: "2026-03-01" },
     { id: 2, concepto: "Publicidad Facebook", monto: 150.00, categoria: "Marketing", fecha: "2026-03-10" }
   ]);
@@ -49,7 +43,6 @@ export default function AdminDashboard() {
 
   // Estados de Edición
   const [editingBarbero, setEditingBarbero] = useState(null);
-  const [editingProduct, setEditingProduct] = useState(null);
   const [editingServicio, setEditingServicio] = useState(null);
 
   useEffect(() => {
@@ -71,41 +64,46 @@ export default function AdminDashboard() {
   const utilidadNeta = stats ? stats.ingresosTotales - totalGastos : 0;
 
   const handleCompletarCita = (idcita) => {
-    const citaIndex = citasHoy.findIndex(c => c.id === idcita);
-    if(citaIndex > -1 && citasHoy[citaIndex].estado !== "Completada") {
-      const cita = citasHoy[citaIndex];
-      // Actualizar estado de cita
-      const nuevasCitas = [...citasHoy];
-      nuevasCitas[citaIndex].estado = "Completada";
-      setCitasHoy(nuevasCitas);
+    const citaIndex = citasHoy.findIndex((c) => c.id === idcita);
+    if (citaIndex === -1 || citasHoy[citaIndex].estado === "Completada") return;
 
-      // Sumar ingreso
-      setStats(prev => ({
-        ...prev,
-        ingresosTotales: prev.ingresosTotales + cita.monto,
-        cortesMesActual: prev.cortesMesActual + 1
-      }));
+    const cita = citasHoy[citaIndex];
 
-      // Sumar corte al cliente
-      const clienteIndex = clientes.findIndex(cl => cl.nombre === cita.cliente);
-      if(clienteIndex > -1) {
-        const nuevosClientes = [...clientes];
-        nuevosClientes[clienteIndex].cortes += 1;
-        // Evaluar subida de rango
-        if(nuevosClientes[clienteIndex].cortes >= nuevosClientes[clienteIndex].proximos) {
-          if(nuevosClientes[clienteIndex].rango === "Bronce") { nuevasClientes[clienteIndex].rango = "Plata"; nuevosClientes[clienteIndex].proximos = 10; }
-          else if(nuevosClientes[clienteIndex].rango === "Plata") { nuevosClientes[clienteIndex].rango = "Oro"; nuevosClientes[clienteIndex].proximos = 20; }
+    setCitasHoy(
+      citasHoy.map((c, i) =>
+        i === citaIndex ? { ...c, estado: "Completada" } : c
+      )
+    );
+
+    setStats((prev) => ({
+      ...prev,
+      ingresosTotales: prev.ingresosTotales + cita.monto,
+      cortesMesActual: prev.cortesMesActual + 1,
+    }));
+
+    const clienteIndex = clientes.findIndex((cl) => cl.nombre === cita.cliente);
+    if (clienteIndex > -1) {
+      const cl = clientes[clienteIndex];
+      let updated = { ...cl, cortes: cl.cortes + 1 };
+      if (updated.cortes >= updated.proximos) {
+        if (updated.rango === "Bronce") {
+          updated = { ...updated, rango: "Plata", proximos: 10 };
+        } else if (updated.rango === "Plata") {
+          updated = { ...updated, rango: "Oro", proximos: 20 };
         }
-        setClientes(nuevosClientes);
       }
+      setClientes(clientes.map((c, i) => (i === clienteIndex ? updated : c)));
+    }
 
-      // Sumar corte al barbero
-      const barberoIndex = barberos.findIndex(b => b.nombre === cita.barbero);
-      if(barberoIndex > -1) {
-        const nuevosBarberos = [...barberos];
-        nuevosBarberos[barberoIndex].cortesRealizados += 1;
-        setBarberos(nuevosBarberos);
-      }
+    const barberoIndex = barberos.findIndex((b) => b.nombre === cita.barbero);
+    if (barberoIndex > -1) {
+      setBarberos(
+        barberos.map((b, i) =>
+          i === barberoIndex
+            ? { ...b, cortesRealizados: b.cortesRealizados + 1 }
+            : b
+        )
+      );
     }
   };
 

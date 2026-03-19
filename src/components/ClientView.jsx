@@ -1,4 +1,3 @@
-import React from 'react';
 import { Star, Award, Scissors, Trophy } from 'lucide-react';
 
 export default function ClientView() {
@@ -64,16 +63,6 @@ export default function ClientView() {
           <p className="text-slate-400 text-sm">Corte gratis o -50% de descuento en Beard Trim + Tinte</p>
         </div>
       </div>
-
-      <style jsx="true">{`
-        @keyframes shine {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        .custom-progress-shine {
-          animation: shine 2s infinite linear;
-        }
-      `}</style>
     </div>
   );
 }

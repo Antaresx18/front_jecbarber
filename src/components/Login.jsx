@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Lock, User as UserIcon, Shield, Loader2, Scissors, User } from 'lucide-react';
 
 export default function Login({ onLogin }) {
@@ -8,7 +8,6 @@ export default function Login({ onLogin }) {
   // Configuraciones temáticas por rol
   const roleConfig = {
     ADMIN: {
-      color: 'brand-gold',
       title: 'Acceso VIP',
       subtitle: 'Portal de Administración',
       icon: <Shield size={40} className="text-brand-gold" />,
@@ -16,7 +15,6 @@ export default function Login({ onLogin }) {
       buttonText: 'Entrar al Dashboard'
     },
     BARBERO: {
-      color: 'brand-accent',
       title: 'Soy Barbero',
       subtitle: 'Revisa tu agenda y comisiones',
       icon: <Scissors size={40} className="text-brand-accent" />,
@@ -24,7 +22,6 @@ export default function Login({ onLogin }) {
       buttonText: 'Entrar a mi Agenda'
     },
     CLIENTE: {
-      color: 'emerald-400',
       title: 'Soy Cliente',
       subtitle: 'Mira tus estadísticas y citas',
       icon: <User size={40} className="text-emerald-400" />,

@@ -1,16 +1,20 @@
-# React + Vite
+# JEC Barber — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Solo la aplicación web (React + Vite). Código de API, base de datos u otros servicios vive en otros repositorios o carpetas.
 
-Currently, two official plugins are available:
+## Estructura del proyecto
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Ruta | Uso |
+|------|-----|
+| `public/images/` | Estáticos por URL (`/images/...`). Por ejemplo el favicon. |
+| `src/styles/` | CSS global (Tailwind, `@theme`, utilidades). Punto de entrada: `main.css`. |
+| `src/components/` | Componentes React por pantalla o dominio. |
+| `src/App.jsx`, `src/main.jsx` | Raíz de la app y montaje en el DOM. |
 
-## React Compiler
+Archivos de configuración en la raíz (`vite.config.js`, `eslint.config.js`, `postcss.config.js`, `index.html`) son propios del front.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Scripts
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- `npm run dev` — desarrollo
+- `npm run build` — producción
+- `npm run preview` — vista previa del build
