@@ -1,3 +1,39 @@
+/** Hoy en calendario local YYYY-MM-DD (coherente con input type="date"). */
+export function ymdLocal(d = new Date()) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * Convierte fechas desde API/Postgres/Supabase a `YYYY-MM-DD`.
+ * Importante: un `Date` de JS no debe pasarse por `String()` (pierde el formato ISO).
+ * @param {unknown} v
+ * @returns {string | null}
+ */
+export function coerceToYmd(v) {
+  if (v == null || v === '') return null;
+  if (typeof v === 'string') {
+    const t = v.trim();
+    const strict = t.match(/^(\d{4}-\d{2}-\d{2})$/);
+    if (strict) return strict[1];
+    const prefix = t.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (prefix) return prefix[1];
+  }
+  if (typeof v === 'object' && v !== null && typeof /** @type {Date} */ (v).getTime === 'function') {
+    const d = /** @type {Date} */ (v);
+    if (Number.isNaN(d.getTime())) return null;
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(d.getUTCDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+  const s = String(v).trim();
+  const m = s.match(/^(\d{4}-\d{2}-\d{2})/);
+  return m ? m[1] : null;
+}
+
 /**
  * Suma días a una fecha YYYY-MM-DD (calendario local).
  * @param {string} fechaYmd

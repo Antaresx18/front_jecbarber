@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Package, AlertTriangle, Minus, Plus, Search, Boxes, Download, Pencil } from 'lucide-react';
+import { Package, AlertTriangle, Minus, Plus, Search, Boxes, Download, Pencil, Trash2 } from 'lucide-react';
 import { useListFilterPagination } from '../../../hooks/useListFilterPagination';
 import PaginationBar from '../../ui/PaginationBar';
 import EmptyState from '../../ui/EmptyState';
 import { downloadInventarioCsv } from '../adminExports';
+import ConfirmDialog from '../../ui/ConfirmDialog';
 
 export default function InventarioTab({
   inventario,
   onAdjustStock,
   onAddItem,
   onUpdateItem,
+  onRemoveItem,
   filterSeed,
   readOnly,
   compact,
@@ -22,6 +24,7 @@ export default function InventarioTab({
   const [draftPrecio, setDraftPrecio] = useState('');
   const [draftStock, setDraftStock] = useState('');
   const [draftMin, setDraftMin] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const preSorted = useMemo(() => {
     let list = [...inventario];
@@ -103,8 +106,15 @@ export default function InventarioTab({
     setEditId(null);
   };
 
+  const confirmDelete = () => {
+    if (!deleteTarget || !onRemoveItem) return;
+    onRemoveItem(deleteTarget.id);
+    setDeleteTarget(null);
+  };
+
   return (
-    <div className="animate-in fade-in duration-300 space-y-4">
+    <>
+      <div className="animate-in fade-in duration-300 space-y-4">
       {!readOnly && (
         <form onSubmit={handleAdd} className="glass-panel p-4 space-y-3 border border-slate-700/50">
           <h3 className="text-sm font-bold text-white flex items-center gap-2">
@@ -311,6 +321,14 @@ export default function InventarioTab({
                             >
                               <Plus size={18} />
                             </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeleteTarget(item)}
+                              className="p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-red-400 border border-slate-600/80 disabled:opacity-50"
+                              aria-label={`Eliminar ${item.nombre}`}
+                            >
+                              <Trash2 size={18} />
+                            </button>
                           </div>
                         )}
                       </div>
@@ -438,6 +456,14 @@ export default function InventarioTab({
                                 >
                                   <Plus size={18} />
                                 </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setDeleteTarget(item)}
+                                  className="p-2 bg-slate-800 rounded-lg text-slate-400 hover:text-red-400 transition-colors"
+                                  aria-label={`Eliminar ${item.nombre}`}
+                                >
+                                  <Trash2 size={18} />
+                                </button>
                               </>
                             )}
                           </div>
@@ -454,5 +480,21 @@ export default function InventarioTab({
         </>
       )}
     </div>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Eliminar producto"
+        message={
+          deleteTarget
+            ? `¿Eliminar definitivamente «${deleteTarget.nombre}»? Si tiene ventas vinculadas, la operación puede fallar.`
+            : ''
+        }
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        danger
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
+    </>
   );
 }

@@ -51,6 +51,8 @@ CREATE TABLE public.clientes (
 CREATE TABLE public.barberos (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   nombre VARCHAR(255) NOT NULL,
+  foto_url TEXT NULL,
+  especialidad VARCHAR(255) NULL,
   porcentaje NUMERIC(5, 2) NOT NULL DEFAULT 50.00 CHECK (porcentaje BETWEEN 0 AND 100),
   cortes_realizados INTEGER NOT NULL DEFAULT 0 CHECK (cortes_realizados >= 0),
   activo BOOLEAN NOT NULL DEFAULT true,
@@ -61,6 +63,7 @@ CREATE TABLE public.barberos (
 CREATE TABLE public.servicios (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   nombre VARCHAR(255) NOT NULL,
+  descripcion TEXT NULL,
   precio NUMERIC(10, 2) NOT NULL CHECK (precio >= 0),
   duracion INTERVAL NOT NULL DEFAULT INTERVAL '30 minutes',
   activo BOOLEAN NOT NULL DEFAULT true,
@@ -421,5 +424,33 @@ CREATE POLICY citas_cliente_insert ON public.citas FOR INSERT WITH CHECK (
 );
 
 CREATE POLICY auditoria_admin_only ON public.auditoria_citas FOR SELECT USING (public.jec_auth_is_admin());
+
+-- Barberos: lectura pública (landing / listados); escritura solo ADMIN
+ALTER TABLE public.barberos ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY barberos_select_public ON public.barberos FOR SELECT USING (true);
+
+CREATE POLICY barberos_admin_insert ON public.barberos FOR INSERT TO authenticated
+  WITH CHECK (public.jec_auth_is_admin());
+
+CREATE POLICY barberos_admin_update ON public.barberos FOR UPDATE TO authenticated
+  USING (public.jec_auth_is_admin()) WITH CHECK (public.jec_auth_is_admin());
+
+CREATE POLICY barberos_admin_delete ON public.barberos FOR DELETE TO authenticated
+  USING (public.jec_auth_is_admin());
+
+-- Servicios: lectura pública; escritura solo ADMIN
+ALTER TABLE public.servicios ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY servicios_select_public ON public.servicios FOR SELECT USING (true);
+
+CREATE POLICY servicios_admin_insert ON public.servicios FOR INSERT TO authenticated
+  WITH CHECK (public.jec_auth_is_admin());
+
+CREATE POLICY servicios_admin_update ON public.servicios FOR UPDATE TO authenticated
+  USING (public.jec_auth_is_admin()) WITH CHECK (public.jec_auth_is_admin());
+
+CREATE POLICY servicios_admin_delete ON public.servicios FOR DELETE TO authenticated
+  USING (public.jec_auth_is_admin());
 
 COMMENT ON VIEW public.resumen_financiero_mensual IS 'KPI mensual; consumir desde admin con rol adecuado o vía Spring.';

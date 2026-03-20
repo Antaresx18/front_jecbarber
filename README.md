@@ -46,17 +46,15 @@ En `.env` o `.env.local` (ver `.env.example`):
 - **`VITE_ADMIN_READONLY=true`** — oculta formularios y acciones de edición en el panel (demo de rol restringido).
 - **`VITE_ENABLE_HISTORIAL=false`** — oculta la pestaña **Historial** de citas (por defecto la pestaña está visible).
 
-El admin usa `?tab=resumen` (u otra pestaña) en la URL para compartir o refrescar la vista. Atajos **1–9** cambian de pestaña cuando el foco no está en un campo de texto; **`/`** abre la búsqueda rápida.
+El admin usa `?tab=resumen` o `?tab=barberos` en la URL. Atajos **1** y **2** cambian de pestaña cuando el foco no está en un campo de texto.
 
 ## Dónde se ven las citas
 
 | Rol | Ruta | Qué verás |
 |-----|------|-----------|
 | **Barbero** | `/barbero` | **Agenda** (14 días), **Inventario** privado, **Finanzas** (rango de fechas, total facturado, comisión % y detalle por servicio; mezcla historial mock + citas completadas en agenda). Datos en `adminData` + `barberoId` en la sesión. |
-| **Admin** | `/admin` → **Resumen** | **Citas de hoy** (solo `fecha === MOCK_HOY`): filtro por barbero, estado, notas. |
-| **Admin** | `/admin` → **Inventario** | Stock **general del salón**. |
-| **Admin** | `/admin` → **Stock barberos** | Inventario **privado de cada barbero** (lectura/ajuste mock, CSV). |
-| **Admin** | `/admin` → **Historial** | Citas pasadas con filtros (+ export CSV). |
+| **Admin** | `/admin` → **Resumen** | Estadísticas del día (KPIs mock) y citas de hoy cuando haya datos locales. |
+| **Admin** | `/admin` → **Gestión barberos** | CRUD de barberos vía **Supabase**. |
 | **Cliente** | `/cliente` | **Inicio** (hero visual de rangos Bronce/Plata/Oro, próxima cita, recompensas), **Reservar** (formulario mock → `sessionStorage` + lista en **Mis citas**), **Mis citas** (mock + reservas locales), **Historial**. Sesión con `clienteId` (p. ej. 1). |
 
 ## Rutas

@@ -25,7 +25,7 @@ export default function AppShell({ children }) {
               Hola, <span className="text-white font-bold">{user?.nombre}</span>
             </span>
             <span className="px-2 py-1 bg-slate-800 text-slate-300 text-xs font-black rounded border border-slate-700/50">
-              {user?.rol}
+              {user?.isGuest ? 'Invitado' : user?.rol}
             </span>
           </div>
           <button

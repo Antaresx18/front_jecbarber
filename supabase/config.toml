@@ -1,0 +1,7 @@
+# Ver https://supabase.com/docs/guides/functions/function-configuration
+#
+# Con verify_jwt = true (por defecto), el gateway puede responder 401 "Invalid JWT"
+# aunque el front envíe un access_token válido (p. ej. claves nuevas "Publishable").
+# Esta función ya valida el Bearer con auth.getUser() y comprueba rol ADMIN.
+[functions.crear-barbero]
+verify_jwt = false
