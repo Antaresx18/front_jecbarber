@@ -26,6 +26,7 @@ function setGuestFlag(on) {
 
 /**
  * Sincroniza sesión Supabase + fila `perfiles` con el estado `user` del front.
+ * No filtra por rol aquí: `fetchSessionUser` solo consulta perfiles por `id = auth.users.id`.
  * Cliente invitado: sin Auth, persistido en sessionStorage.
  */
 export function AuthProvider({ children }) {
@@ -50,7 +51,8 @@ export function AuthProvider({ children }) {
       try {
         const u = await fetchSessionUser(session.user);
         if (!cancelledRef.current) setUser(u);
-      } catch {
+      } catch (e) {
+        console.warn('[AuthProvider] No se pudo cargar perfiles tras sesión Auth:', e);
         await supabase.auth.signOut();
         if (!cancelledRef.current) setUser(null);
       }

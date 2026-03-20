@@ -14,11 +14,17 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { homePathForRole } from '../auth/homePathForRole';
 import { supabase } from '../supabase';
-import { fetchSessionUser, mapAuthErrorMessage, toProfileLoadError } from '../auth/supabaseProfile';
+import {
+  fetchSessionUser,
+  mapAuthErrorMessage,
+  ProfileMissingError,
+  toProfileLoadError,
+} from '../auth/supabaseProfile';
 import { isValidEmail } from '../utils/validations';
 import LoadingSpinner from './ui/LoadingSpinner';
 
 /** @typedef {'roles' | 'cliente-menu' | 'login'} LoginFlow */
+/** @typedef {{ message: string, sql?: string } | null} LoginErrorState */
 
 export default function Login() {
   const { login, enterAsGuestCliente, authReady } = useAuth();
@@ -34,7 +40,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(/** @type {LoginErrorState} */ (null));
   const [fieldErrors, setFieldErrors] = useState({ email: null, password: null });
 
   if (!authReady) {
@@ -74,12 +80,12 @@ export default function Login() {
       });
 
       if (authError) {
-        setError(mapAuthErrorMessage(authError));
+        setError({ message: mapAuthErrorMessage(authError) });
         return;
       }
 
       if (!data.user) {
-        setError('No se pudo obtener el usuario. Vuelve a intentarlo.');
+        setError({ message: 'No se pudo obtener el usuario. Vuelve a intentarlo.' });
         return;
       }
 
@@ -88,30 +94,41 @@ export default function Login() {
         sessionUser = await fetchSessionUser(data.user);
       } catch (profileErr) {
         await supabase.auth.signOut();
-        setError(toProfileLoadError(profileErr).message);
+        if (profileErr instanceof ProfileMissingError) {
+          setError({ message: profileErr.message, sql: profileErr.sqlSuggestion });
+        } else {
+          setError({ message: toProfileLoadError(profileErr).message });
+        }
         return;
       }
 
       if (loginHint === 'admin' && sessionUser.rol !== 'ADMIN') {
         await supabase.auth.signOut();
-        setError('Esta cuenta no es de administrador. Elige «Barbero» o «Cliente» según tu perfil.');
+        setError({
+          message:
+            'Esta cuenta no es de administrador. Elige «Barbero» o «Cliente» según tu perfil.',
+        });
         return;
       }
       if (loginHint === 'barbero' && sessionUser.rol !== 'BARBERO') {
         await supabase.auth.signOut();
-        setError('Esta cuenta no es de barbero. Prueba «Admin» o «Cliente» si corresponde.');
+        setError({
+          message: 'Esta cuenta no es de barbero. Prueba «Admin» o «Cliente» si corresponde.',
+        });
         return;
       }
       if (loginHint === 'cliente' && sessionUser.rol !== 'CLIENTE') {
         await supabase.auth.signOut();
-        setError('Esta cuenta no está registrada como cliente.');
+        setError({ message: 'Esta cuenta no está registrada como cliente.' });
         return;
       }
 
       login(sessionUser);
       navigate(homePathForRole(sessionUser.rol), { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al iniciar sesión.');
+      setError({
+        message: err instanceof Error ? err.message : 'Error al iniciar sesión.',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -272,12 +289,38 @@ export default function Login() {
             </button>
 
             {error && (
-              <p
-                className="mb-4 text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2"
+              <div
+                className="mb-4 text-sm bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 leading-relaxed"
                 role="alert"
               >
-                {error}
-              </p>
+                <p className="text-red-100">{error.message}</p>
+                {error.sql ? (
+                  <details className="mt-3 rounded-lg border border-slate-600/50 bg-slate-950/90 text-left">
+                    <summary className="cursor-pointer list-none px-3 py-2 text-xs font-bold text-amber-400 hover:text-amber-300 select-none [&::-webkit-details-marker]:hidden flex items-center gap-2">
+                      <span className="text-slate-500 font-normal">▶</span>
+                      Ver SQL sugerido (Supabase → SQL Editor)
+                    </summary>
+                    <div className="px-3 pb-3 border-t border-slate-700/60">
+                      <pre className="mt-2 max-h-52 overflow-auto rounded-md bg-black/50 p-2 text-[10px] font-mono text-slate-300 whitespace-pre-wrap break-all">
+                        {error.sql}
+                      </pre>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(error.sql);
+                          } catch {
+                            /* ignore */
+                          }
+                        }}
+                        className="mt-2 text-xs font-bold text-brand-gold hover:underline"
+                      >
+                        Copiar SQL al portapapeles
+                      </button>
+                    </div>
+                  </details>
+                ) : null}
+              </div>
             )}
 
             <p className="text-xs text-slate-500 mb-4">{loginSubtitle}</p>

@@ -35,12 +35,18 @@ Deno.serve(async (req) => {
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY");
+  /** Supabase inyecta SUPABASE_SERVICE_ROLE_KEY; SERVICE_ROLE_KEY es alias por si lo definiste a mano. */
+  const serviceRoleKey =
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SERVICE_ROLE_KEY");
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
 
   if (!supabaseUrl || !serviceRoleKey || !anonKey) {
     return json(
-      { error: "Configuración del servidor incompleta.", code: "CONFIG" },
+      {
+        error:
+          "Configuración incompleta en la Edge Function (falta URL, service role o anon key). Revisa secretos en Supabase.",
+        code: "CONFIG",
+      },
       500,
     );
   }
