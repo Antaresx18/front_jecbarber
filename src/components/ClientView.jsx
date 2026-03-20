@@ -79,12 +79,21 @@ export default function ClientView() {
   const { user } = useAuth();
   const clienteId = user?.clienteId ?? 1;
 
-  const cliente = useMemo(
-    () => INITIAL_CLIENTES.find((c) => c.id === clienteId) ?? INITIAL_CLIENTES[0],
-    [clienteId]
-  );
+  const cliente = useMemo(() => {
+    const found = INITIAL_CLIENTES.find((c) => c.id === clienteId) ?? INITIAL_CLIENTES[0];
+    return (
+      found ?? {
+        id: clienteId,
+        nombre: user?.nombre ?? 'Cliente',
+        rango: 'Bronce',
+        cortes: 0,
+        proximos: 5,
+        notas: '',
+      }
+    );
+  }, [clienteId, user?.nombre]);
 
-  const nombreMostrar = cliente?.nombre ?? user?.nombre ?? 'Cliente';
+  const nombreMostrar = cliente.nombre ?? user?.nombre ?? 'Cliente';
 
   const [extraCitas, setExtraCitas] = useState(() => loadExtraCitas(clienteId));
   const [reservaMsg, setReservaMsg] = useState(null);

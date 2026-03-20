@@ -1,34 +1,78 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { supabase } from '../supabase';
+import { fetchSessionUser } from '../auth/supabaseProfile';
 import { AuthContext } from './authContextInstance';
 
-const STORAGE_KEY = 'jecbarber_session';
-
-function readStoredUser() {
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const u = JSON.parse(raw);
-    if (u && typeof u.rol === 'string' && typeof u.nombre === 'string') return u;
-  } catch {
-    /* ignore */
-  }
-  return null;
-}
-
+/**
+ * Sincroniza sesión Supabase + fila `perfiles` con el estado `user` del front.
+ */
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(readStoredUser);
+  const [user, setUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
+  const cancelledRef = useRef(false);
+  const subscriptionRef = useRef(null);
 
+  useEffect(() => {
+    cancelledRef.current = false;
+
+    async function syncSessionToUser(session) {
+      if (!session?.user) {
+        if (!cancelledRef.current) setUser(null);
+        return;
+      }
+      try {
+        const u = await fetchSessionUser(session.user);
+        if (!cancelledRef.current) setUser(u);
+      } catch {
+        await supabase.auth.signOut();
+        if (!cancelledRef.current) setUser(null);
+      }
+    }
+
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (cancelledRef.current) return;
+        await syncSessionToUser(session);
+      } catch {
+        /* ignore */
+      } finally {
+        if (!cancelledRef.current) setAuthReady(true);
+      }
+
+      if (cancelledRef.current) return;
+
+      const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+        setTimeout(async () => {
+          if (cancelledRef.current) return;
+          await syncSessionToUser(session);
+          if (!cancelledRef.current) setAuthReady(true);
+        }, 0);
+      });
+      subscriptionRef.current = data.subscription;
+    })();
+
+    return () => {
+      cancelledRef.current = true;
+      subscriptionRef.current?.unsubscribe();
+      subscriptionRef.current = null;
+    };
+  }, []);
+
+  /** Tras `signInWithPassword` en Login, actualiza el contexto al instante. */
   const login = useCallback((nextUser) => {
     setUser(nextUser);
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser));
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    sessionStorage.removeItem(STORAGE_KEY);
   }, []);
 
-  const value = useMemo(() => ({ user, login, logout }), [user, login, logout]);
+  const value = useMemo(
+    () => ({ user, login, logout, authReady }),
+    [user, login, logout, authReady]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

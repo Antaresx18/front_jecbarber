@@ -90,9 +90,16 @@ function BarberosSupabaseMvp() {
   );
 }
 
-/** MVP Supabase en `/`; si ya hay sesión mock, entra directo al panel. */
+/** MVP Supabase en `/`; si hay sesión Supabase + perfil, va al panel del rol. */
 function HomeOrMvp() {
-  const { user } = useAuth();
+  const { user, authReady } = useAuth();
+  if (!authReady) {
+    return (
+      <div className="min-h-dvh flex items-center justify-center bg-zinc-950">
+        <p className="text-zinc-400 text-sm">Cargando sesión…</p>
+      </div>
+    );
+  }
   if (user) return <Navigate to={homePathForRole(user.rol)} replace />;
   return <BarberosSupabaseMvp />;
 }

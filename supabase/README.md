@@ -14,7 +14,8 @@ No hay `seed.sql` en el repo: carga datos desde **Spring Boot**, scripts SQL man
 2. **SQL Editor** → nueva query.
 3. Pega y ejecuta el contenido de `migrations/001_initial_schema.sql`.
 4. Revisión de decisiones y riesgos: `docs/MASTER_SCHEMA_REVIEW.md`.
-5. En **Project Settings → Database** copia la **Connection string** para Spring Boot.
+5. **Usuarios admin / barberos / clientes y datos iniciales:** `docs/SUPABASE_ONBOARDING.md`.
+6. En **Project Settings → Database** copia la **Connection string** para Spring Boot.
 
 ## Notas
 

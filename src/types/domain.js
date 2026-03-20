@@ -7,8 +7,8 @@
  * @property {RolUsuario} rol
  * @property {string} nombre
  * @property {string} [email]
- * @property {number} [barberoId] — mock BARBERO: id del profesional en datos admin
- * @property {number} [clienteId] — mock CLIENTE: id en catálogo INITIAL_CLIENTES
+ * @property {number|string} [barberoId] — UUID (Supabase) o número en datos locales
+ * @property {number|string} [clienteId] — UUID (Supabase) o número en datos locales
  */
 
 /**

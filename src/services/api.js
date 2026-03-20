@@ -31,36 +31,3 @@ export async function loadAdminDashboardStats() {
   }
   return { ...INITIAL_STATS };
 }
-
-/**
- * Login simulado. Contraseña demo: 12345678
- * @param {string} email
- * @param {string} password
- * @param {import('../types/domain.js').RolUsuario} rolSeleccionado
- * @returns {Promise<import('../types/domain.js').UsuarioSesion>}
- */
-export async function loginWithMock(email, password, rolSeleccionado) {
-  await delay(700);
-  const ok = password === '12345678';
-  if (!ok) {
-    throw new Error('Credenciales incorrectas (prueba la contraseña demo: 12345678).');
-  }
-  const nombres = {
-    ADMIN: 'Admin Master',
-    BARBERO: 'Kevin Barbero',
-    CLIENTE: 'Jorge',
-  };
-  /** @type {import('../types/domain.js').UsuarioSesion} */
-  const base = {
-    rol: rolSeleccionado,
-    nombre: nombres[rolSeleccionado] || 'Usuario',
-    email: email.trim(),
-  };
-  if (rolSeleccionado === 'BARBERO') {
-    base.barberoId = 1;
-  }
-  if (rolSeleccionado === 'CLIENTE') {
-    base.clienteId = 1;
-  }
-  return base;
-}

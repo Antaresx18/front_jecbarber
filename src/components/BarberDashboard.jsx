@@ -74,10 +74,17 @@ export default function BarberDashboard() {
 
   const [seccion, setSeccion] = useState('agenda');
 
-  const perfilBarbero = useMemo(
-    () => INITIAL_BARBEROS.find((b) => b.id === barberoId) ?? INITIAL_BARBEROS[0],
-    [barberoId]
-  );
+  const perfilBarbero = useMemo(() => {
+    const found = INITIAL_BARBEROS.find((b) => b.id === barberoId) ?? INITIAL_BARBEROS[0];
+    return (
+      found ?? {
+        id: barberoId,
+        nombre: user?.nombre ?? 'Barbero',
+        porcentaje: 50,
+        cortesRealizados: 0,
+      }
+    );
+  }, [barberoId, user?.nombre]);
 
   const rangoPorClienteId = useMemo(() => mapRangoPorClienteId(INITIAL_CLIENTES), []);
 
@@ -182,7 +189,7 @@ export default function BarberDashboard() {
 
   const comisionPct = perfilBarbero.porcentaje / 100;
   const comisionHoyEstimada = facturacionHoy * comisionPct;
-  const comisionMesMock = 1240;
+  const comisionMesMock = 0;
 
   const movimientosCobrados = useMemo(() => {
     const rows = [];

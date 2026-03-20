@@ -61,7 +61,7 @@ El admin usa `?tab=resumen` (u otra pestaña) en la URL para compartir o refresc
 
 ## Rutas
 
-- `/login` — inicio de sesión (demo: contraseña `12345678`).
+- `/login` — inicio de sesión con **Supabase Auth**; el rol sale de la tabla `perfiles` (ver `docs/SUPABASE_ONBOARDING.md`).
 - `/admin`, `/cliente`, `/barbero` — vistas por rol (protegidas).
 - `/` — redirige según sesión o a `/login`.
 
