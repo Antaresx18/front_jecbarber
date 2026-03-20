@@ -23,10 +23,19 @@ En un **repositorio de proyecto**, la URL es `https://TU_USUARIO.github.io/NOMBR
 ## Build manual (rama `gh-pages`)
 
 ```bash
-# Sustituye front_jecbarber por el nombre real de tu repositorio
+# Debe coincidir con la ruta de la URL (normalmente el nombre del repo en minúsculas)
 set VITE_BASE_PATH=/front_jecbarber/
 npm run build:gh-pages
 ```
+
+Para tu sitio **https://antaresx18.github.io/front_jecbarber/** la base tiene que ser exactamente **`/front_jecbarber/`** (mismo texto que en la URL, en minúsculas).
+
+### Comprobar en el navegador (si sigue en blanco)
+
+1. Abre el sitio y pulsa **F12** → pestaña **Red / Network**.
+2. Recarga: busca el `.js` del bundle (p. ej. `index-….js`).
+3. Si el estado es **404** y la URL empieza por `https://antaresx18.github.io/assets/...` (sin `front_jecbarber`), el build se hizo **sin** `VITE_BASE_PATH` → vuelve a compilar con `build:gh-pages` y la variable correcta.
+4. Si el `.js` es **200** pero la página sigue vacía, mira **Consola** por errores en rojo (a veces falta configurar **Secrets** de Supabase en GitHub Actions).
 
 Sube el **contenido** de `dist/` a la rama que uses para Pages.
 

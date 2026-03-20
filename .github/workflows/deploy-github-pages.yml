@@ -26,10 +26,19 @@ jobs:
           node-version: '20'
           cache: npm
 
+      # La URL pública de Pages usa el nombre del repo en minúsculas; si el repo es Front_XXX,
+      # sin esto los assets quedan en /Front_XXX/ y el navegador pide /front_xxx/ → pantalla en blanco.
+      - name: Base path para GitHub Pages
+        id: pages_base
+        shell: bash
+        run: |
+          NAME_LOWER=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
+          echo "vite_base=/${NAME_LOWER}/" >> "$GITHUB_OUTPUT"
+          echo "Usando VITE_BASE_PATH=/${NAME_LOWER}/"
+
       - name: Instalar y compilar
         env:
-          # Obligatorio para Pages en https://usuario.github.io/NOMBRE-REPO/
-          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_BASE_PATH: ${{ steps.pages_base.outputs.vite_base }}
           # Opcional: define estos secrets en el repo para que el build tenga Supabase (si no, el front irá sin URL/key)
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
