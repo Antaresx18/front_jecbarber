@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:gh-pages": "vite build && node scripts/gh-pages-postbuild.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",

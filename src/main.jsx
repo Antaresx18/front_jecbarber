@@ -5,9 +5,14 @@ import './styles/main.css';
 import App from './App.jsx';
 import { AuthProvider } from './context/AuthProvider';
 
+/** En GitHub Pages, Vite define BASE_URL = /repo/; React Router necesita basename sin barra final. */
+const baseUrl = import.meta.env.BASE_URL ?? '/';
+const routerBasename =
+  baseUrl === '/' || baseUrl === '' ? undefined : baseUrl.replace(/\/$/, '');
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={routerBasename}>
       <AuthProvider>
         <App />
       </AuthProvider>
