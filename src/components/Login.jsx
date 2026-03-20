@@ -4,7 +4,7 @@ import { Lock, User as UserIcon, Shield, Loader2, Eye, EyeOff } from 'lucide-rea
 import { useAuth } from '../hooks/useAuth';
 import { homePathForRole } from '../auth/homePathForRole';
 import { supabase } from '../supabase';
-import { fetchSessionUser, mapAuthErrorMessage } from '../auth/supabaseProfile';
+import { fetchSessionUser, mapAuthErrorMessage, toProfileLoadError } from '../auth/supabaseProfile';
 import { isValidEmail } from '../utils/validations';
 import LoadingSpinner from './ui/LoadingSpinner';
 
@@ -61,11 +61,7 @@ export default function Login() {
         sessionUser = await fetchSessionUser(data.user);
       } catch (profileErr) {
         await supabase.auth.signOut();
-        const msg =
-          profileErr instanceof Error
-            ? profileErr.message
-            : 'No se pudo cargar tu perfil.';
-        setError(msg);
+        setError(toProfileLoadError(profileErr).message);
         return;
       }
 

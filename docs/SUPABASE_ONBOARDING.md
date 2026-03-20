@@ -142,3 +142,29 @@ Si el usuario existe en **Authentication** pero **no** tiene fila en **`perfiles
 ## Si algo falla por RLS
 
 Las políticas RLS están en **`citas`**, **`perfiles`** y **`auditoria_citas`**. La tabla **`barberos`** no tiene RLS en la migración actual, así que el **anon key** desde el front puede hacer `SELECT` en `barberos` sin usuario logueado. Si más adelante añades RLS a más tablas, revisa políticas para `anon` / usuarios autenticados.
+
+---
+
+## «No se pudo cargar tu perfil» / error al cargar `perfiles`
+
+Auth **sí** funcionó (email y contraseña OK). El fallo es al leer **`public.perfiles`** con tu **User UID**.
+
+1. **Fila faltante o UUID distinto**  
+   En **Authentication → Users**, copia el **User UID** del usuario. En **Table Editor → `perfiles`** debe existir una fila cuyo **`id`** sea **exactamente** ese UUID (no otro usuario de prueba). Si no hay fila, en **SQL Editor**:
+
+   ```sql
+   INSERT INTO public.perfiles (id, rol)
+   VALUES ('PEGA_AQUI_EL_USER_UID', 'ADMIN');
+   ```
+
+2. **Rol en mayúsculas**  
+   El enum del esquema es `'ADMIN'`, `'BARBERO'`, `'CLIENTE'`. Si insertaste `'admin'` en minúsculas, puede no coincidir con el enum o con la validación del front.
+
+3. **Migración no aplicada**  
+   Si la tabla **`perfiles`** no existe o el proyecto es otro, PostgREST devolverá error; revisa que ejecutaste **`001_initial_schema.sql`** en **este** proyecto de Supabase.
+
+4. Tras un intento fallido, vuelve a entrar: el mensaje de error en pantalla ahora intenta mostrar el **detalle** que envía Supabase (permisos, tabla, etc.).
+
+### «infinite recursion detected in policy for relation "perfiles"»
+
+La política que permitía leer `perfiles` como admin hacía un `SELECT` sobre la misma tabla y Postgres entraba en bucle. **Solución:** en **SQL Editor** ejecuta el contenido de **`supabase/migrations/003_fix_perfiles_rls_recursion.sql`** (añade la función `jec_auth_is_admin` y sustituye las políticas afectadas). Si vuelves a aplicar el **`001_initial_schema.sql` completo** desde cero en un proyecto nuevo, ya trae el arreglo integrado.

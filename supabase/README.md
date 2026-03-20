@@ -5,6 +5,7 @@
 | Archivo | Descripción |
 |---------|-------------|
 | `migrations/001_initial_schema.sql` | Esquema único: **UUID**, `rango_tiempo` (`tstzrange`), `cita_detalles` (carrito), `auditoria_citas`, `ventas_salon`, `horarios_trabajo`, `bloqueos_agenda`, `liquidaciones`, ENUM en mayúsculas, RLS y vista `resumen_financiero_mensual`. |
+| `migrations/003_fix_perfiles_rls_recursion.sql` | **Solo si ya ejecutaste un 001 antiguo:** corrige recursión RLS en `perfiles` (`jec_auth_is_admin`). Los 001 nuevos ya incluyen el arreglo. |
 
 No hay `seed.sql` en el repo: carga datos desde **Spring Boot**, scripts SQL manuales o el panel de Supabase.
 

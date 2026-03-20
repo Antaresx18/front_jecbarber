@@ -370,20 +370,34 @@ LEFT JOIN egresos_gastos eg ON m.mes = eg.mes;
 -- =============================================================================
 -- RLS — sin políticas USING(true). Spring con service_role suele saltar RLS.
 -- =============================================================================
+-- Comprueba si el JWT es admin leyendo perfiles SIN pasar de nuevo por RLS
+-- (evita "infinite recursion detected in policy for relation perfiles").
+CREATE OR REPLACE FUNCTION public.jec_auth_is_admin()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.perfiles p
+    WHERE p.id = auth.uid() AND p.rol = 'ADMIN'
+  );
+$$;
+
+REVOKE ALL ON FUNCTION public.jec_auth_is_admin() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.jec_auth_is_admin() TO authenticated;
+
 ALTER TABLE public.perfiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.citas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.auditoria_citas ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY perfiles_select_self ON public.perfiles FOR SELECT USING (auth.uid() = id);
 
-CREATE POLICY perfiles_select_admin ON public.perfiles FOR SELECT USING (
-  EXISTS (SELECT 1 FROM public.perfiles p WHERE p.id = auth.uid() AND p.rol = 'ADMIN')
-);
+CREATE POLICY perfiles_select_admin ON public.perfiles FOR SELECT USING (public.jec_auth_is_admin());
 
-CREATE POLICY citas_admin_all ON public.citas FOR ALL USING (
-  EXISTS (SELECT 1 FROM public.perfiles p WHERE p.id = auth.uid() AND p.rol = 'ADMIN')
-) WITH CHECK (
-  EXISTS (SELECT 1 FROM public.perfiles p WHERE p.id = auth.uid() AND p.rol = 'ADMIN')
+CREATE POLICY citas_admin_all ON public.citas FOR ALL USING (public.jec_auth_is_admin()) WITH CHECK (
+  public.jec_auth_is_admin()
 );
 
 CREATE POLICY citas_barbero_select ON public.citas FOR SELECT USING (
@@ -406,8 +420,6 @@ CREATE POLICY citas_cliente_insert ON public.citas FOR INSERT WITH CHECK (
   AND cliente_id = (SELECT cliente_id FROM public.perfiles WHERE id = auth.uid() AND rol = 'CLIENTE')
 );
 
-CREATE POLICY auditoria_admin_only ON public.auditoria_citas FOR SELECT USING (
-  EXISTS (SELECT 1 FROM public.perfiles p WHERE p.id = auth.uid() AND p.rol = 'ADMIN')
-);
+CREATE POLICY auditoria_admin_only ON public.auditoria_citas FOR SELECT USING (public.jec_auth_is_admin());
 
 COMMENT ON VIEW public.resumen_financiero_mensual IS 'KPI mensual; consumir desde admin con rol adecuado o vía Spring.';

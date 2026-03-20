@@ -3,6 +3,22 @@ import { supabase } from '../supabase';
 const VALID_ROLES = new Set(['ADMIN', 'BARBERO', 'CLIENTE']);
 
 /**
+ * PostgREST a veces devuelve objetos que no pasan `instanceof Error`.
+ * @param {unknown} err
+ * @returns {Error}
+ */
+export function toProfileLoadError(err) {
+  if (err instanceof Error) return err;
+  if (err && typeof err === 'object') {
+    const o = /** @type {{ message?: string; details?: string; hint?: string; code?: string }} */ (err);
+    const parts = [o.message, o.details, o.hint].filter(Boolean);
+    if (parts.length) return new Error(parts.join(' — '));
+    if (o.code) return new Error(`Error de base de datos (${o.code}).`);
+  }
+  return new Error('No se pudo cargar tu perfil.');
+}
+
+/**
  * Carga `perfiles` para el usuario autenticado y devuelve la forma de sesión del front.
  * @param {import('@supabase/supabase-js').User} supabaseUser
  */
@@ -13,10 +29,10 @@ export async function fetchSessionUser(supabaseUser) {
     .eq('id', supabaseUser.id)
     .maybeSingle();
 
-  if (error) throw error;
+  if (error) throw toProfileLoadError(error);
   if (!row?.rol || !VALID_ROLES.has(row.rol)) {
     throw new Error(
-      'No hay perfil asignado para esta cuenta. Pide al administrador que cree tu fila en «perfiles».'
+      'No hay fila en la tabla «perfiles» para tu usuario, o el rol no es válido. En SQL Editor ejecuta: INSERT INTO public.perfiles (id, rol) VALUES (\'<tu User UID de Authentication>\', \'ADMIN\');'
     );
   }
 
