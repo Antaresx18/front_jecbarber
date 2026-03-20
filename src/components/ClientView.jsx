@@ -27,6 +27,8 @@ import {
   MOCK_HOY,
 } from './admin/adminData';
 import { addDaysIso, parseHoraToMinutes } from '../utils/adminFilters';
+import { metodoPagoApiToUi, metodoPagoUiLabel } from '../config/dbEnums';
+import { buildTstzRangeLiteral } from '../utils/schemaAdapter';
 
 const STORAGE_PREFIX = 'jecbarber_cliente_reservas_';
 
@@ -143,6 +145,8 @@ export default function ClientView() {
   const [formBarberoId, setFormBarberoId] = useState(String(INITIAL_BARBEROS[0]?.id ?? 1));
   const [formServicioId, setFormServicioId] = useState(String(serviciosActivos[0]?.id ?? 1));
   const [formPedido, setFormPedido] = useState('');
+  const [formMetodoPago, setFormMetodoPago] = useState('EFECTIVO');
+  const [formNombreInvitado, setFormNombreInvitado] = useState('');
 
   useEffect(() => {
     setFormFecha(defaultFechaReserva);
@@ -156,6 +160,8 @@ export default function ClientView() {
       if (!barbero || !servicio || !formFecha) return;
 
       const pedidoTrim = formPedido.trim();
+      const invitadoTrim = formNombreInvitado.trim();
+      const rangoPreview = buildTstzRangeLiteral(formFecha, formHora, servicio.duracion ?? 45);
       const nueva = {
         id: -Date.now(),
         fecha: formFecha,
@@ -169,10 +175,14 @@ export default function ClientView() {
         estado: 'Pendiente',
         monto: servicio.precio,
         notas: '',
+        metodoPago: formMetodoPago,
+        nombreInvitado: invitadoTrim || undefined,
+        rangoTiempoPreview: rangoPreview ?? undefined,
       };
       setExtraCitas((prev) => [...prev, nueva]);
       setReservaMsg('Cita agendada. La verás en «Mis citas» (guardado en este navegador, demo).');
       setFormPedido('');
+      setFormNombreInvitado('');
       setSeccion('citas');
     },
     [
@@ -180,6 +190,8 @@ export default function ClientView() {
       formFecha,
       formHora,
       formPedido,
+      formMetodoPago,
+      formNombreInvitado,
       formServicioId,
       cliente,
       clienteId,
@@ -393,8 +405,10 @@ export default function ClientView() {
             </h2>
           </div>
           <p className="text-sm text-slate-500">
-            Elige fecha (desde el día mock), hora, barbero y servicio. La reserva se guarda solo en este navegador hasta
-            que exista API.
+            Elige fecha (desde el día mock), hora, barbero y servicio. Opcional: <strong className="text-slate-400">pago</strong>{' '}
+            y <strong className="text-slate-400">invitado</strong> (alineado al modelo SaaS con{' '}
+            <code className="text-slate-400 font-mono text-xs">tstzrange</code> en Postgres). La reserva sigue en{' '}
+            <code className="text-slate-500 font-mono text-xs">sessionStorage</code> hasta conectar el API.
           </p>
           <form
             onSubmit={enviarReserva}
@@ -454,6 +468,30 @@ export default function ClientView() {
                   </option>
                 ))}
               </select>
+            </label>
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+              Método de pago previsto
+              <select
+                value={formMetodoPago}
+                onChange={(e) => setFormMetodoPago(e.target.value)}
+                className="mt-1.5 w-full bg-slate-900/90 border border-slate-600 rounded-xl px-3 py-2.5 text-sm text-white"
+              >
+                {metodoPagoUiLabel.map(({ value, label }) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+              Reservo para otra persona (opcional)
+              <input
+                type="text"
+                value={formNombreInvitado}
+                onChange={(e) => setFormNombreInvitado(e.target.value)}
+                placeholder="Nombre del invitado (walk-in / regalo)"
+                className="mt-1.5 w-full bg-slate-900/90 border border-slate-600 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-slate-600"
+              />
             </label>
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
               Detalle de lo que quieres (opcional)
@@ -531,6 +569,28 @@ export default function ClientView() {
                               {c.pedidoCliente}
                             </p>
                           )}
+                          {(c.nombreInvitado || c.metodoPago) && (
+                            <p className="text-[10px] text-slate-500 mt-2 flex flex-wrap items-center gap-2">
+                              {c.nombreInvitado ? (
+                                <span>
+                                  <span className="text-slate-600 font-bold uppercase">Invitado:</span> {c.nombreInvitado}
+                                </span>
+                              ) : null}
+                              {c.metodoPago ? (
+                                <span className="inline-flex px-2 py-0.5 rounded border border-slate-600 text-slate-400">
+                                  {metodoPagoApiToUi[c.metodoPago] ?? c.metodoPago}
+                                </span>
+                              ) : null}
+                            </p>
+                          )}
+                          {esLocal && c.rangoTiempoPreview ? (
+                            <p
+                              className="text-[9px] font-mono text-slate-600 mt-1 break-all opacity-80"
+                              title="Vista previa tstzrange (Postgres SaaS)"
+                            >
+                              {c.rangoTiempoPreview}
+                            </p>
+                          ) : null}
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-2 shrink-0">

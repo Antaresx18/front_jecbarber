@@ -33,6 +33,8 @@ Aplicación web en **React** (interfaz y estado con componentes y hooks). El API
 | `src/services/api.js` | Mocks y `getApiBaseUrl()`; sustituir por `fetch` al backend. |
 | `src/types/domain.js` | JSDoc de dominio (citas, clientes, roles…). |
 | `src/utils/validations.js` | Validaciones reutilizables (+ tests). |
+| `src/utils/schemaAdapter.js` | Mapeo DTO API (UUID, ENUM mayúsculas, `tstzrange`) ↔ forma del UI. |
+| `src/config/dbEnums.js` | Equivalencias ENUM Postgres SaaS ↔ textos del mock. |
 | `src/components/ui/` | `LoadingSpinner`, `ErrorBanner`, `EmptyState`, `ConfirmDialog`, `PaginationBar`. |
 | `src/components/admin/` | Panel administrativo (pestañas, CSV, datos mock). |
 | `src/config/adminEnv.js` | Flags `VITE_ADMIN_READONLY`, `VITE_ENABLE_HISTORIAL`. |
