@@ -5,3 +5,6 @@
 # Esta función ya valida el Bearer con auth.getUser() y comprueba rol ADMIN.
 [functions.crear-barbero]
 verify_jwt = false
+
+[functions.crear-cliente]
+verify_jwt = false

@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
-    "format": "prettier --write \"src/**/*.{js,jsx,css}\" \"*.{js,json,html}\""
+    "format": "prettier --write \"src/**/*.{js,jsx,css}\" \"*.{js,json,html}\"",
+    "supabase:deploy:crear-cliente": "supabase functions deploy crear-cliente",
+    "supabase:deploy:crear-barbero": "supabase functions deploy crear-barbero"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.3",

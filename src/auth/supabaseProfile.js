@@ -130,8 +130,26 @@ export async function fetchSessionUser(supabaseUser) {
  * @returns {string}
  */
 export function mapAuthErrorMessage(err) {
+  const status = err && typeof err === 'object' && 'status' in err ? Number(err.status) : NaN;
+  if (status === 504 || status === 502 || status === 503) {
+    return (
+      'El servidor de autenticación no respondió a tiempo (error de red o sobrecarga en Supabase). ' +
+      'Espera unos minutos, revisa status.supabase.com o el estado del proyecto en el panel, y vuelve a intentarlo.'
+    );
+  }
   const msg = err?.message ?? '';
   const lower = msg.toLowerCase();
+  if (
+    lower.includes('gateway timeout') ||
+    lower.includes('504') ||
+    lower.includes('timeout') ||
+    lower.includes('timed out')
+  ) {
+    return (
+      'La petición de inicio de sesión tardó demasiado o el servicio no respondió. ' +
+      'Si en los logs de Supabase ves 504 en /auth/v1/token, el problema está en su infraestructura: reintenta más tarde o revisa que el proyecto no esté pausado.'
+    );
+  }
   if (lower.includes('invalid login') || lower.includes('invalid_credentials') || err.status === 400) {
     return 'Credenciales incorrectas. Revisa el correo y la contraseña.';
   }

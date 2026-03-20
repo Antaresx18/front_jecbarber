@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../supabase';
 import { fetchSessionUser } from '../auth/supabaseProfile';
+import { isTimeoutLikeError, promiseWithTimeout } from '../utils/promiseWithTimeout';
+
+/** Si Auth o PostgREST no responden, no bloqueamos la app indefinidamente. */
+const AUTH_GET_SESSION_MS = 22000;
+const AUTH_FETCH_PROFILE_MS = 22000;
 import {
+  clearGuestCitaIds,
   createGuestClienteUser,
   GUEST_CLIENTE_STORAGE_KEY,
 } from '../auth/guestCliente';
@@ -48,11 +54,22 @@ export function AuthProvider({ children }) {
         return;
       }
       setGuestFlag(false);
+      clearGuestCitaIds();
       try {
-        const u = await fetchSessionUser(session.user);
+        const u = await promiseWithTimeout(
+          fetchSessionUser(session.user),
+          AUTH_FETCH_PROFILE_MS,
+          'PROFILE_TIMEOUT'
+        );
         if (!cancelledRef.current) setUser(u);
       } catch (e) {
+        const timedOut = isTimeoutLikeError(e);
         console.warn('[AuthProvider] No se pudo cargar perfiles tras sesión Auth:', e);
+        if (timedOut) {
+          console.warn(
+            '[AuthProvider] Tiempo de espera al cargar perfil. Cierra sesión para evitar estado inconsistente.'
+          );
+        }
         await supabase.auth.signOut();
         if (!cancelledRef.current) setUser(null);
       }
@@ -60,9 +77,20 @@ export function AuthProvider({ children }) {
 
     (async () => {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+        let session = null;
+        try {
+          const {
+            data: { session: s },
+          } = await promiseWithTimeout(supabase.auth.getSession(), AUTH_GET_SESSION_MS, 'SESSION_TIMEOUT');
+          session = s;
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : '';
+          console.warn(
+            '[AuthProvider] getSession tardó demasiado o falló:',
+            msg === 'SESSION_TIMEOUT' ? 'timeout' : e
+          );
+          session = null;
+        }
         if (cancelledRef.current) return;
         await syncSessionToUser(session);
       } catch {
@@ -93,6 +121,7 @@ export function AuthProvider({ children }) {
   /** Tras `signInWithPassword` en Login, actualiza el contexto al instante. */
   const login = useCallback((nextUser) => {
     setGuestFlag(false);
+    clearGuestCitaIds();
     setUser(nextUser);
   }, []);
 
@@ -103,6 +132,7 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     setGuestFlag(false);
+    clearGuestCitaIds();
     await supabase.auth.signOut();
     setUser(null);
   }, []);

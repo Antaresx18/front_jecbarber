@@ -44,6 +44,50 @@ Si desplegaste la función solo desde el **panel web**, desactiva allí la verif
 
 El front llama: `supabase.functions.invoke('crear-barbero', { body: { email, password, nombre, especialidad } })` (sin cabeceras manuales; el cliente adjunta el JWT de la sesión).
 
+## Edge Function `crear-cliente`
+
+Alta de **cliente con acceso al portal**: inserta fila en `clientes`, crea usuario en **Auth** (sin `rol: CLIENTE` en metadata, para no duplicar filas con el trigger del registro público) y fila en `perfiles` con `rol = CLIENTE`. Solo **ADMIN**.
+
+Si en el panel ves **«Failed to send a request to the Edge Function»**, la función **no está desplegada** en ese proyecto (o el nombre no coincide). Hay que desplegarla una vez.
+
+### Despliegue con Supabase CLI (recomendado)
+
+En la raíz del repo (donde está la carpeta `supabase/`):
+
+1. Instala la CLI: [Supabase CLI](https://supabase.com/docs/guides/cli).
+2. Inicia sesión: `supabase login`
+3. Enlaza el proyecto: `supabase link --project-ref TU_PROJECT_REF`  
+   (`TU_PROJECT_REF` está en **Project Settings → General** de Supabase, p. ej. `udyrlhvfgdtmmkuozpg`).
+4. Secret con la **service role** (⚠️ no la subas al repo; solo en Supabase):  
+   `supabase secrets set SERVICE_ROLE_KEY=tu_service_role_key`  
+   (La clave está en **Project Settings → API → service_role**.)
+5. Despliega:  
+   `supabase functions deploy crear-cliente`
+
+Si ya usas `crear-barbero` con el mismo secret, basta con el paso 5 para `crear-cliente`.
+
+En el **panel de Supabase → Edge Functions**, comprueba que exista **`crear-cliente`** y que **JWT verification** esté desactivada para esa función (o vuelve a desplegar con el `config.toml` del repo, que pone `verify_jwt = false`).
+
+### Si no despliegas la función
+
+En **Gestión clientes → Añadir cliente**, deja la **contraseña vacía**: solo se crea la ficha en `clientes` (agenda / citas). Eso **no** llama a la Edge Function. Para que el cliente pueda entrar en la app hace falta desplegar `crear-cliente` o que se registre solo desde el login.
+
+Mismos secretos que `crear-barbero` (`SERVICE_ROLE_KEY` o `SUPABASE_SERVICE_ROLE_KEY` inyectada al desplegar). En `config.toml`: `verify_jwt = false`.
+
+El panel **Gestión clientes** invoca la función solo cuando rellenas **contraseña inicial**.
+
+### Body mínimo desde un formulario (Nombre + Correo)
+
+```json
+{ "Nombre": "Ana López", "Correo": "ana@ejemplo.com" }
+```
+
+También acepta `nombre` / `email`. Con solo esos campos se inserta en `public.clientes`. Si además envías `password` (≥ 6 caracteres), se crea usuario Auth y `perfiles` (CLIENTE).
+
+### Opcional: avisar a Spring Boot
+
+Secret `SPRING_CLIENTE_WEBHOOK_URL`: URL POST donde tu backend reciba `{ Nombre, Correo, clienteId }`. Opcional `SPRING_WEBHOOK_SECRET` (cabecera `X-Webhook-Secret`).
+
 ## CLI (opcional)
 
 Si usas [Supabase CLI](https://supabase.com/docs/guides/cli):

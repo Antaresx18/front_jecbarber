@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Loader2,
   AlertCircle,
@@ -11,47 +11,103 @@ import {
   Scissors,
 } from 'lucide-react';
 import { supabase } from '../../supabase';
-import { addDaysIso, parseHoraToMinutes } from '../../utils/adminFilters';
+import { addDaysIso, parseHoraToMinutes, ymdLocal } from '../../utils/adminFilters';
+import {
+  parseStartFromRangoLocal,
+  parseStartFromRangoUtc,
+  ymdUtcFromTs,
+  extractLowerBoundFromRango,
+  parseRangoStartToDate,
+} from '../../utils/nuevaCitaHelpers';
 
-function isoToday() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-/** Lunes–domingo (UTC) que contiene `fechaYmd`. */
-function getUtcWeekRange(fechaYmd) {
-  const [y, m, d] = fechaYmd.split('-').map(Number);
-  const date = new Date(Date.UTC(y, m - 1, d));
-  const wd = date.getUTCDay();
-  const mondayOffset = wd === 0 ? -6 : 1 - wd;
-  const monday = new Date(date);
-  monday.setUTCDate(date.getUTCDate() + mondayOffset);
-  const sunday = new Date(monday);
-  sunday.setUTCDate(monday.getUTCDate() + 6);
-  return {
-    start: monday.toISOString().slice(0, 10),
-    end: sunday.toISOString().slice(0, 10),
-  };
-}
-
-/** @param {string | null | undefined} rangeStr */
-function parseStartFromRango(rangeStr) {
-  if (!rangeStr || typeof rangeStr !== 'string') return { fecha: null, hora: null };
-  const inner = rangeStr.replace(/^\[/, '').replace(/\)$/, '');
-  const parts = inner.split(',');
-  const startRaw = parts[0]?.trim();
-  if (!startRaw) return { fecha: null, hora: null };
-  const dt = new Date(startRaw);
-  if (Number.isNaN(dt.getTime())) return { fecha: null, hora: null };
-  const y = dt.getUTCFullYear();
-  const mo = String(dt.getUTCMonth() + 1).padStart(2, '0');
-  const da = String(dt.getUTCDate()).padStart(2, '0');
-  let h = dt.getUTCHours();
-  const mi = dt.getUTCMinutes();
+/**
+ * Hora en 12h (ej. "10:30 AM") desde tstzrange/tsrange u objeto PostgREST.
+ * Respaldo cuando parseStartFromRango* no rellena hora pero el rango sí trae datos.
+ */
+function horaLegibleDesdeRango(rangeVal) {
+  const startRaw = extractLowerBoundFromRango(rangeVal);
+  if (!startRaw) return null;
+  const s = typeof startRaw === 'string' ? startRaw : String(startRaw);
+  const dt = parseRangoStartToDate(s);
+  if (dt && !Number.isNaN(dt.getTime())) {
+    let h = dt.getHours();
+    const mi = dt.getMinutes();
+    const ap = h >= 12 ? 'PM' : 'AM';
+    let h12 = h % 12;
+    if (h12 === 0) h12 = 12;
+    return `${h12}:${String(mi).padStart(2, '0')} ${ap}`;
+  }
+  const m24 = s.match(/\b(\d{1,2}):(\d{2})(?::\d{2})?\b/);
+  if (!m24) return null;
+  let h = parseInt(m24[1], 10) % 24;
+  const mi = parseInt(m24[2], 10);
   const ap = h >= 12 ? 'PM' : 'AM';
   let h12 = h % 12;
   if (h12 === 0) h12 = 12;
-  const hora = `${h12}:${String(mi).padStart(2, '0')} ${ap}`;
-  return { fecha: `${y}-${mo}-${da}`, hora };
+  return `${h12}:${String(mi).padStart(2, '0')} ${ap}`;
+}
+
+function horaDesdeCreatedAt(ts) {
+  if (ts == null || ts === '') return null;
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return null;
+  let h = d.getHours();
+  const mi = d.getMinutes();
+  const ap = h >= 12 ? 'PM' : 'AM';
+  let h12 = h % 12;
+  if (h12 === 0) h12 = 12;
+  return `${h12}:${String(mi).padStart(2, '0')} ${ap}`;
+}
+
+/** Lunes–domingo (calendario local) que contiene `fechaYmd`. */
+function getLocalWeekRange(fechaYmd) {
+  const [y, m, d] = fechaYmd.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  const wd = date.getDay();
+  const mondayOffset = wd === 0 ? -6 : 1 - wd;
+  const monday = new Date(y, m - 1, d + mondayOffset);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  const fmt = (dt) =>
+    `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+  return { start: fmt(monday), end: fmt(sunday) };
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ * @param {string} desde
+ * @param {string} hasta
+ */
+function mapCitaFromRow(row, desde, hasta) {
+  const loc = parseStartFromRangoLocal(row.rango_tiempo);
+  const utc = parseStartFromRangoUtc(row.rango_tiempo);
+  let fecha = loc.fecha || utc.fecha;
+  if (!fecha && row.created_at) fecha = ymdUtcFromTs(row.created_at);
+
+  let hora = loc.fecha ? loc.hora : utc.fecha ? utc.hora : null;
+  if (!hora || hora === '—') {
+    const hRango = horaLegibleDesdeRango(row.rango_tiempo);
+    if (hRango) hora = hRango;
+  }
+  if (!hora || hora === '—') {
+    const hCre = horaDesdeCreatedAt(row.created_at);
+    if (hCre) hora = hCre;
+  }
+  if (!hora) hora = 'Sin hora';
+
+  if (!fecha || fecha < desde || fecha > hasta) return null;
+
+  const clienteNombre = row.clientes?.nombre ?? row.nombre_invitado ?? 'Invitado';
+  const br = row.barberos && typeof row.barberos === 'object' ? row.barberos : null;
+  return {
+    cita_id: row.id,
+    fecha,
+    hora,
+    barbero_nombre: br?.nombre ?? '—',
+    cliente_nombre: clienteNombre,
+    estado: String(row.estado ?? ''),
+    monto: Number(row.monto ?? 0),
+  };
 }
 
 function mapErr(err) {
@@ -84,98 +140,100 @@ export default function AdminInicioDashboard() {
   const [alertasStock, setAlertasStock] = useState([]);
   const [proximas, setProximas] = useState(/** @type {CitaRow[]} */ ([]));
 
-  const today = useMemo(() => isoToday(), []);
-
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const week = getUtcWeekRange(today);
-      const desde = addDaysIso(today, -7);
-      const hasta = addDaysIso(today, 14);
+      const hoy = ymdLocal();
+      const week = getLocalWeekRange(hoy);
+      const desde = addDaysIso(hoy, -120);
+      const hasta = addDaysIso(hoy, 180);
 
-      const invP = supabase.from('inventario_salon').select('id,nombre,stock,stock_minimo').order('nombre');
-      const barbP = supabase
-        .from('barberos')
-        .select('nombre,cortes_realizados')
-        .order('cortes_realizados', { ascending: false })
-        .limit(1);
+      const [invSalonRes, invBarbRes, barbRes, rawRes] = await Promise.all([
+        supabase.from('inventario_salon').select('id,nombre,stock,stock_minimo').order('nombre'),
+        supabase
+          .from('inventario_barbero')
+          .select('id,nombre,stock,stock_minimo,barberos(nombre)')
+          .order('nombre'),
+        supabase
+          .from('barberos')
+          .select('nombre,cortes_realizados')
+          .order('cortes_realizados', { ascending: false })
+          .limit(1),
+        supabase
+          .from('citas')
+          .select('id,estado,monto,rango_tiempo,nombre_invitado,created_at,barberos(nombre),clientes(nombre)')
+          .limit(3000),
+      ]);
 
-      const { data: invData, error: invErr } = await invP;
-      if (invErr) throw invErr;
-      const bajo = (invData ?? []).filter((p) => Number(p.stock) < Number(p.stock_minimo ?? 0));
+      if (invSalonRes.error) throw invSalonRes.error;
+      if (invBarbRes.error) throw invBarbRes.error;
+      if (barbRes.error) throw barbRes.error;
+      if (rawRes.error) throw rawRes.error;
 
-      const { data: barbRows, error: barbErr } = await barbP;
-      if (barbErr) throw barbErr;
-      const top = barbRows?.[0];
+      const bajoSalon = (invSalonRes.data ?? []).filter(
+        (p) => Number(p.stock) < Number(p.stock_minimo ?? 0)
+      );
+      const bajoBarbero = (invBarbRes.data ?? []).filter(
+        (p) => Number(p.stock) < Number(p.stock_minimo ?? 0)
+      );
+
+      const top = barbRes.data?.[0];
       setBarberoDestacado({
         nombre: top?.nombre ?? '—',
         cortes: Number(top?.cortes_realizados ?? 0),
       });
 
-      setAlertasStock(
-        bajo.map((p) => ({
-          id: p.id,
+      setAlertasStock([
+        ...bajoSalon.map((p) => ({
+          id: `salon-${p.id}`,
           nombre: p.nombre,
           stock: Number(p.stock),
           min: Number(p.stock_minimo ?? 0),
-        }))
-      );
-
-      const { data: raw, error: rawErr } = await supabase
-        .from('citas')
-        .select('id,estado,monto,rango_tiempo,nombre_invitado,barberos(nombre),clientes(nombre)')
-        .limit(1000);
-      if (rawErr) throw rawErr;
-      const rows = (raw ?? [])
-        .map((row) => {
-          const { fecha, hora } = parseStartFromRango(row.rango_tiempo);
-          const clienteNombre =
-            row.clientes?.nombre ?? row.nombre_invitado ?? 'Invitado';
+          origen: 'Salón',
+        })),
+        ...bajoBarbero.map((p) => {
+          const bn = p.barberos && typeof p.barberos === 'object' ? p.barberos.nombre : null;
           return {
-            cita_id: row.id,
-            fecha: fecha ?? '',
-            hora: hora ?? '',
-            barbero_nombre: row.barberos?.nombre ?? '—',
-            cliente_nombre: clienteNombre,
-            estado: row.estado,
-            monto: Number(row.monto ?? 0),
+            id: `barb-${p.id}`,
+            nombre: bn ? `${p.nombre} (${bn})` : p.nombre,
+            stock: Number(p.stock),
+            min: Number(p.stock_minimo ?? 0),
+            origen: 'Barbero',
           };
-        })
-        .filter((r) => r.fecha >= desde && r.fecha <= hasta);
+        }),
+      ]);
 
-      const activosHoy = rows.filter(
-        (r) => r.fecha === today && r.estado !== 'CANCELADA'
-      );
+      const rows = (rawRes.data ?? [])
+        .map((row) => mapCitaFromRow(row, desde, hasta))
+        .filter(Boolean);
+
+      const activosHoy = rows.filter((r) => r.fecha === hoy && r.estado !== 'CANCELADA');
       setCitasHoy(activosHoy.length);
 
       const ingresos = rows
         .filter(
           (r) =>
-            r.estado === 'COMPLETADA' &&
-            r.fecha >= week.start &&
-            r.fecha <= week.end
+            r.estado === 'COMPLETADA' && r.fecha >= week.start && r.fecha <= week.end && r.monto > 0
         )
         .reduce((s, r) => s + r.monto, 0);
       setIngresosSemana(ingresos);
 
-      const pendientesHoy = activosHoy
-        .filter((r) => r.estado === 'PENDIENTE')
+      const colaHoy = activosHoy
+        .filter((r) => r.estado === 'PENDIENTE' || r.estado === 'EN_PROCESO')
         .sort((a, b) => parseHoraToMinutes(a.hora) - parseHoraToMinutes(b.hora));
 
-      const nowMin = (() => {
-        const n = new Date();
-        return n.getUTCHours() * 60 + n.getUTCMinutes();
-      })();
+      const now = new Date();
+      const nowMin = now.getHours() * 60 + now.getMinutes();
 
-      const futuras = pendientesHoy.filter((r) => parseHoraToMinutes(r.hora) >= nowMin);
-      setProximas(futuras.length > 0 ? futuras : pendientesHoy);
+      const futuras = colaHoy.filter((r) => parseHoraToMinutes(r.hora) >= nowMin);
+      setProximas(futuras.length > 0 ? futuras : colaHoy);
     } catch (e) {
       setError(mapErr(e));
     } finally {
       setLoading(false);
     }
-  }, [today]);
+  }, []);
 
   useEffect(() => {
     load();
@@ -190,10 +248,16 @@ export default function AdminInicioDashboard() {
       <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-black text-white tracking-tight">Inicio</h1>
-          <p className="text-slate-400 text-sm mt-1">
-            Resumen del día · {today}
-          </p>
+          <p className="text-slate-400 text-sm mt-1">Resumen del día · {ymdLocal()}</p>
         </div>
+        <button
+          type="button"
+          onClick={() => load()}
+          disabled={loading}
+          className="text-xs font-bold text-brand-accent hover:underline disabled:opacity-50 self-start sm:self-auto"
+        >
+          Actualizar
+        </button>
       </header>
 
       {loading ? (
@@ -210,6 +274,13 @@ export default function AdminInicioDashboard() {
           <div>
             <p className="font-bold text-red-200">No se pudo cargar el inicio</p>
             <p className="text-sm text-red-300/90 mt-1">{error}</p>
+            <button
+              type="button"
+              onClick={() => load()}
+              className="mt-3 text-sm font-bold text-brand-accent hover:underline"
+            >
+              Reintentar
+            </button>
           </div>
         </div>
       ) : (
@@ -226,7 +297,7 @@ export default function AdminInicioDashboard() {
                 <Calendar className="text-brand-gold/90 shrink-0" size={22} aria-hidden />
               </div>
               <p className="text-3xl font-black text-brand-gold tabular-nums mt-2">{citasHoy}</p>
-              <p className="text-[11px] text-slate-500 mt-1">Incluye pendientes y completadas</p>
+              <p className="text-[11px] text-slate-500 mt-1">Incluye pendientes y completadas (hoy local)</p>
             </article>
 
             <article className={`${cardBase} border-violet-500/25`}>
@@ -239,7 +310,7 @@ export default function AdminInicioDashboard() {
               <p className="text-3xl font-black text-violet-300 tabular-nums mt-2">
                 ${ingresosSemana.toFixed(2)}
               </p>
-              <p className="text-[11px] text-slate-500 mt-1">Bruto · citas COMPLETADA (semana UTC)</p>
+              <p className="text-[11px] text-slate-500 mt-1">Bruto · citas finalizadas · semana local (lun–dom)</p>
             </article>
 
             <article className={`${cardBase} border-amber-500/20`}>
@@ -267,9 +338,32 @@ export default function AdminInicioDashboard() {
               <p className="text-3xl font-black text-rose-300 tabular-nums mt-2">
                 {alertasStock.length}
               </p>
-              <p className="text-[11px] text-slate-500 mt-1">Productos con stock &lt; mínimo</p>
+              <p className="text-[11px] text-slate-500 mt-1">Salón + stock por barbero bajo el mínimo</p>
             </article>
           </section>
+
+          {alertasStock.length > 0 && (
+            <section className="glass-panel rounded-2xl border border-rose-500/20 bg-rose-950/10 p-4 sm:p-5">
+              <p className="text-xs font-bold uppercase tracking-wider text-rose-300/90 mb-3">Detalle alertas</p>
+              <ul className="flex flex-wrap gap-2">
+                {alertasStock.slice(0, 12).map((a) => (
+                  <li
+                    key={a.id}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-slate-900/80 border border-rose-500/25 text-slate-300"
+                  >
+                    <span className="text-rose-200 font-semibold">{a.nombre}</span>
+                    <span className="text-slate-500 mx-1">·</span>
+                    <span className="tabular-nums">
+                      {a.stock} &lt; {a.min}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              {alertasStock.length > 12 && (
+                <p className="text-[11px] text-slate-500 mt-2">+{alertasStock.length - 12} más</p>
+              )}
+            </section>
+          )}
 
           <section className="glass-panel rounded-2xl border border-slate-700/50 p-6 sm:p-8">
             <div className="flex items-center gap-2 mb-6">
@@ -278,13 +372,13 @@ export default function AdminInicioDashboard() {
               </div>
               <div>
                 <h2 className="text-lg font-black text-white">Próximas citas</h2>
-                <p className="text-xs text-slate-500">Hoy · pendientes · orden por hora</p>
+                <p className="text-xs text-slate-500">Hoy · pendientes y en curso · orden por hora (local)</p>
               </div>
             </div>
 
             {proximas.length === 0 ? (
               <p className="text-slate-500 text-sm py-8 text-center border border-dashed border-slate-700 rounded-xl">
-                No hay citas pendientes para hoy.
+                No hay citas pendientes ni en curso para hoy.
               </p>
             ) : (
               <ul className="relative pl-2 sm:pl-4">
@@ -303,11 +397,18 @@ export default function AdminInicioDashboard() {
                     />
                     <div className="flex-1 min-w-0 rounded-xl border border-slate-700/60 bg-slate-900/50 px-4 py-3">
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                        <span className="text-brand-gold font-black text-sm tabular-nums">{c.hora}</span>
+                        <span className="text-brand-gold font-black text-sm tabular-nums min-w-[5.25rem] inline-block shrink-0">
+                          {c.hora}
+                        </span>
                         <span className="text-white font-bold truncate flex items-center gap-1.5">
                           <UserRound size={14} className="text-slate-500 shrink-0" aria-hidden />
                           {c.cliente_nombre}
                         </span>
+                        {c.estado === 'EN_PROCESO' && (
+                          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-300 border border-sky-500/35">
+                            En curso
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-slate-400 mt-1.5 flex items-center gap-1.5">
                         <Scissors size={12} className="text-violet-400/80 shrink-0" aria-hidden />

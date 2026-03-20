@@ -1,5 +1,14 @@
 import { NavLink } from 'react-router-dom';
-import { Home, LayoutDashboard, Scissors, Receipt, BarChart3, Award, CalendarRange } from 'lucide-react';
+import {
+  Home,
+  LayoutDashboard,
+  Scissors,
+  Receipt,
+  BarChart3,
+  Award,
+  CalendarRange,
+  Users,
+} from 'lucide-react';
 
 const linkBase =
   'flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-sm font-bold whitespace-nowrap';
@@ -63,6 +72,10 @@ export default function AdminSidebar() {
           <NavLink to="/admin/barberos" className={({ isActive }) => linkClass(isActive)}>
             <Award size={18} className="text-brand-gold" aria-hidden />
             Gestión barberos
+          </NavLink>
+          <NavLink to="/admin/clientes" className={({ isActive }) => linkClass(isActive)}>
+            <Users size={18} className="text-brand-gold" aria-hidden />
+            Gestión clientes
           </NavLink>
           <NavLink to="/admin/servicios" className={({ isActive }) => linkClass(isActive)}>
             <Scissors size={18} className="text-brand-gold" aria-hidden />

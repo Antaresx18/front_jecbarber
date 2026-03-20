@@ -17,6 +17,7 @@ export const rangoUiToApi = {
 
 export const estadoCitaApiToUi = {
   PENDIENTE: 'Pendiente',
+  EN_PROCESO: 'En curso',
   COMPLETADA: 'Completada',
   CANCELADA: 'Cancelada',
   NO_ASISTIO: 'No asistió',
