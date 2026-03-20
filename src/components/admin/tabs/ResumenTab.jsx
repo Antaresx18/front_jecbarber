@@ -89,54 +89,52 @@ export default function ResumenTab({
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className={`glass-panel ${cardPad} relative overflow-hidden group hover:border-brand-gold/50 transition-colors`}>
-          <p className="text-slate-400 font-medium mb-1 flex items-center gap-2 text-sm">
-            <DollarSign size={16} className="text-brand-gold" aria-hidden />
+        <div className={`glass-panel ${cardPad} relative overflow-hidden group hover:border-brand-gold/50 transition-colors min-w-0 flex flex-col`}>
+          <p className="text-slate-400 font-medium mb-1 flex items-center gap-2 text-sm break-words">
+            <DollarSign size={16} className="text-brand-gold shrink-0" aria-hidden />
             Ingresos (Bruto)
           </p>
-          <h3 className={`font-black text-white mt-2 ${titleSm}`}>
+          <h3 className={`font-black text-white mt-2 break-all ${titleSm}`}>
             ${stats.ingresosTotales.toLocaleString()}
           </h3>
-          <p className="text-xs mt-2 flex items-center gap-1 text-slate-500">
+          <p className="text-xs mt-2 flex items-center gap-1 text-slate-500 break-words mt-auto">
             {ingDelta >= 0 ? (
-              <TrendingUp className="text-emerald-400" size={14} aria-hidden />
+              <TrendingUp className="text-emerald-400 shrink-0" size={14} aria-hidden />
             ) : (
-              <TrendingDown className="text-red-400" size={14} aria-hidden />
+              <TrendingDown className="text-red-400 shrink-0" size={14} aria-hidden />
             )}
-            vs mes ant.: {ingDelta >= 0 ? '+' : ''}
-            {ingPct}% (mock)
+            vs mes ant.: {ingDelta >= 0 ? '+' : ''}{ingPct}%
           </p>
         </div>
-        <div className={`glass-panel ${cardPad} relative overflow-hidden group hover:border-emerald-500/50 transition-colors`}>
-          <p className="text-slate-400 font-medium mb-1 flex items-center gap-2 text-sm">
-            <ArrowUpCircle size={16} className="text-emerald-400" aria-hidden />
+        <div className={`glass-panel ${cardPad} relative overflow-hidden group hover:border-emerald-500/50 transition-colors min-w-0 flex flex-col`}>
+          <p className="text-slate-400 font-medium mb-1 flex items-center gap-2 text-sm break-words">
+            <ArrowUpCircle size={16} className="text-emerald-400 shrink-0" aria-hidden />
             Utilidad neta
           </p>
-          <h3 className={`font-black text-emerald-400 mt-2 ${titleSm}`}>
+          <h3 className={`font-black text-emerald-400 mt-2 break-all ${titleSm}`}>
             ${utilidadNeta.toLocaleString()}
           </h3>
-          <p className="text-xs text-slate-500 mt-2">
-            vs mes ant.: {utilDelta >= 0 ? '+' : ''}${utilDelta.toLocaleString()} (mock)
+          <p className="text-xs text-slate-500 mt-auto break-words pt-2">
+            vs ant.: {utilDelta >= 0 ? '+' : ''}${utilDelta.toLocaleString()}
           </p>
         </div>
-        <div className={`glass-panel ${cardPad} relative overflow-hidden group`}>
-          <p className="text-slate-400 font-medium mb-1 flex items-center gap-2 text-sm">
-            <Scissors size={16} className="text-brand-accent" aria-hidden />
+        <div className={`glass-panel ${cardPad} relative overflow-hidden group min-w-0 flex flex-col`}>
+          <p className="text-slate-400 font-medium mb-1 flex items-center gap-2 text-sm break-words">
+            <Scissors size={16} className="text-brand-accent shrink-0" aria-hidden />
             Cortes mes
           </p>
-          <h3 className={`font-black text-white mt-2 ${titleSm}`}>{stats.cortesMesActual}</h3>
-          <p className="text-xs text-slate-500 mt-2">
-            vs mes ant.: {cortesDelta >= 0 ? '+' : ''}
-            {cortesDelta} (mock)
+          <h3 className={`font-black text-white mt-2 break-all ${titleSm}`}>{stats.cortesMesActual}</h3>
+          <p className="text-xs text-slate-500 mt-auto break-words pt-2">
+            vs ant.: {cortesDelta >= 0 ? '+' : ''}{cortesDelta}
           </p>
         </div>
-        <div className={`glass-panel ${cardPad} relative overflow-hidden group`}>
-          <p className="text-slate-400 font-medium mb-1 flex items-center gap-2 text-sm">
-            <Users size={16} className="text-indigo-400" aria-hidden />
+        <div className={`glass-panel ${cardPad} relative overflow-hidden group min-w-0 flex flex-col`}>
+          <p className="text-slate-400 font-medium mb-1 flex items-center gap-2 text-sm break-words">
+            <Users size={16} className="text-indigo-400 shrink-0" aria-hidden />
             Clientes (lista)
           </p>
-          <h3 className={`font-black text-white mt-2 ${titleSm}`}>{clientesCount}</h3>
-          <p className="text-xs text-slate-500 mt-2">Sincronizado con la pestaña Clientes.</p>
+          <h3 className={`font-black text-white mt-2 break-all ${titleSm}`}>{clientesCount}</h3>
+          <p className="text-xs text-slate-500 mt-auto break-words pt-2">Sincronizado pta. Clientes</p>
         </div>
       </div>
 

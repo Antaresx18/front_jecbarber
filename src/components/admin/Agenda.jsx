@@ -95,19 +95,19 @@ export default function Agenda({ readOnly = false }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [barberosCatalogo, setBarberosCatalogo] = useState(/** @type {BarberoCatalogo[]} */ ([]));
-  const [citas, setCitas] = useState(/** @type {CitaAgenda[]} */ ([]));
+  const [barberosCatalogo, setBarberosCatalogo] = useState(/** @type {BarberoCatalogo[]} */([]));
+  const [citas, setCitas] = useState(/** @type {CitaAgenda[]} */([]));
 
   const [toast, setToast] = useState(null);
   const [saving, setSaving] = useState(false);
   const [servicios, setServicios] = useState(
-    /** @type {{ id: string; nombre: string; precio: number; duracion: unknown }[]} */ ([])
+    /** @type {{ id: string; nombre: string; precio: number; duracion: unknown }[]} */([])
   );
-  const [clientes, setClientes] = useState(/** @type {{ id: string; nombre: string }[]} */ ([]));
+  const [clientes, setClientes] = useState(/** @type {{ id: string; nombre: string }[]} */([]));
   const [ncFecha, setNcFecha] = useState(ymdLocal);
   const [ncHora, setNcHora] = useState('10:00');
   const [ncBarberoId, setNcBarberoId] = useState('');
-  const [ncServicioIds, setNcServicioIds] = useState(/** @type {string[]} */ ([]));
+  const [ncServicioIds, setNcServicioIds] = useState(/** @type {string[]} */([]));
   const [ncClienteId, setNcClienteId] = useState('');
   const [ncNombreInvitado, setNcNombreInvitado] = useState('');
   const [ncFormErr, setNcFormErr] = useState(null);
@@ -464,22 +464,26 @@ export default function Agenda({ readOnly = false }) {
                   <ul className="flex flex-wrap gap-2">
                     {servicios.map((s) => (
                       <li key={s.id}>
+                        {/* NUEVO CÓDIGO CON ESTILO SWITCH COHERENTE */}
                         <label
-                          className={`inline-flex items-center gap-2 cursor-pointer select-none px-3 py-2 rounded-lg border text-xs font-bold transition-colors ${
-                            ncServicioIds.includes(s.id)
-                              ? 'border-violet-500/60 bg-violet-500/15 text-violet-200'
-                              : 'border-slate-600 bg-slate-900/60 text-slate-300 hover:border-slate-500'
-                          }`}
+                          className={`inline-flex items-center gap-3 cursor-pointer select-none px-3 py-2 rounded-xl border text-xs font-bold transition-all duration-200 ${ncServicioIds.includes(s.id)
+                              ? 'border-brand-gold/50 bg-brand-gold/5 text-white shadow-[0_0_10px_rgba(212,175,55,0.1)]'
+                              : 'border-slate-700 bg-slate-900/40 text-slate-400 hover:border-slate-500'
+                            }`}
                         >
-                          <input
-                            type="checkbox"
-                            checked={ncServicioIds.includes(s.id)}
-                            onChange={() => toggleNcServicio(s.id)}
-                            className="rounded border-slate-500 text-violet-500 focus:ring-violet-500/40"
-                          />
-                          <span>
-                            {s.nombre}{' '}
-                            <span className="text-brand-gold tabular-nums">${s.precio.toFixed(2)}</span>
+                          <div className="relative flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={ncServicioIds.includes(s.id)}
+                              onChange={() => toggleNcServicio(s.id)}
+                              className="sr-only peer"
+                            />
+                            <div className="w-8 h-4 bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-brand-gold shadow-inner"></div>
+                          </div>
+
+                          <span className="flex flex-col">
+                            <span className={ncServicioIds.includes(s.id) ? 'text-white' : ''}>{s.nombre}</span>
+                            <span className="text-brand-gold tabular-nums opacity-90">${s.precio.toFixed(2)}</span>
                           </span>
                         </label>
                       </li>

@@ -43,3 +43,28 @@
   background-size: 200% auto;
   animation: cliente-rango-shimmer 4s ease infinite;
 }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Base style for elements that might have horizontal scrollbars */
+* {
+  scrollbar-color: #334155 transparent;
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}

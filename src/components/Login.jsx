@@ -159,7 +159,7 @@ export default function Login() {
         <div className="absolute -bottom-[20%] -left-[10%] w-[500px] h-[500px] rounded-full blur-[100px] transition-colors duration-1000 bg-brand-accent/10" />
       </div>
 
-      <div className="glass-panel max-w-lg w-full p-8 relative z-10 animate-in zoom-in-95 duration-500">
+      <div className="glass-panel max-w-lg w-full p-6 sm:p-8 relative z-10 animate-in zoom-in-95 duration-500">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center p-4 bg-slate-900 rounded-full border border-slate-700/50 mb-4 transition-transform hover:scale-105 duration-300 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
             <Scissors size={40} className="text-brand-gold" aria-hidden />

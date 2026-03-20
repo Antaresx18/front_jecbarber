@@ -942,7 +942,7 @@ export default function BarberDashboard() {
                                     </div>
                                     <div className="min-w-0 space-y-2 flex-1">
                                       <div className="flex flex-wrap items-center gap-2">
-                                        <h4 className="text-lg font-bold text-white flex items-center gap-2 flex-wrap">
+                                        <h4 className="text-lg font-bold text-white flex items-center gap-2 flex-wrap break-words min-w-0 w-full">
                                           <User size={16} className="text-slate-500 shrink-0" aria-hidden />
                                           {cita.clienteNombre}
                                         </h4>
@@ -964,7 +964,7 @@ export default function BarberDashboard() {
                                         <p className="text-[10px] font-black uppercase tracking-wider text-brand-accent">
                                           Lo que pidió el cliente
                                         </p>
-                                        <p className="text-white text-sm font-medium leading-snug mt-1.5">
+                                        <p className="text-white text-sm font-medium leading-snug mt-1.5 break-words">
                                           {(cita.pedidoCliente ?? '').trim() || cita.servicios || '—'}
                                         </p>
                                         {(cita.pedidoCliente ?? '').trim() && cita.servicios ? (
@@ -1134,7 +1134,7 @@ export default function BarberDashboard() {
                                 <span className="text-slate-600 hidden sm:inline">·</span>
                                 <span className="text-slate-400 text-sm">{c.servicios ?? '—'}</span>
                               </div>
-                              <p className="text-xs text-slate-500 leading-relaxed border-l-2 border-brand-accent/30 pl-2">
+                              <p className="text-xs text-slate-500 leading-relaxed border-l-2 border-brand-accent/30 pl-2 break-words">
                                 <span className="text-slate-600 font-bold uppercase text-[10px]">Pidió: </span>
                                 {(c.pedidoCliente ?? '').trim() || c.servicios || '—'}
                               </p>
@@ -1206,20 +1206,23 @@ export default function BarberDashboard() {
                 <ul className="divide-y divide-slate-700/40">
                   {horariosOrdenadosEdicion.map((h) => (
                     <li key={h.dia_semana} className="px-4 py-4 flex flex-col lg:flex-row lg:items-center gap-4">
-                      <label className="flex items-center gap-3 min-w-[11rem] cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={h.activo}
-                          onChange={(e) =>
-                            setHorariosEdit((prev) =>
-                              prev.map((row) =>
-                                row.dia_semana === h.dia_semana ? { ...row, activo: e.target.checked } : row
+                      <label className="flex items-center gap-3 min-w-[11rem] cursor-pointer group">
+                        <div className="relative flex items-center shrink-0">
+                          <input
+                            type="checkbox"
+                            checked={h.activo}
+                            onChange={(e) =>
+                              setHorariosEdit((prev) =>
+                                prev.map((row) =>
+                                  row.dia_semana === h.dia_semana ? { ...row, activo: e.target.checked } : row
+                                )
                               )
-                            )
-                          }
-                          className="rounded border-slate-600 bg-slate-900 text-brand-accent focus:ring-brand-accent/40"
-                        />
-                        <span className="text-white font-semibold text-sm">
+                            }
+                            className="sr-only peer"
+                          />
+                          <div className="w-9 h-5 bg-slate-700/80 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 peer-checked:after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-accent/80 shadow-inner border border-slate-600/50 peer-checked:border-brand-accent/50 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-brand-accent/50"></div>
+                        </div>
+                        <span className="text-slate-300 group-hover:text-white transition-colors font-semibold text-sm">
                           {DIAS_SEMANA[h.dia_semana] ?? `Día ${h.dia_semana}`}
                         </span>
                       </label>

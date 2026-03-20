@@ -321,7 +321,7 @@ export default function ClientView() {
                     <p className="text-[10px] font-black uppercase tracking-wider text-brand-accent">
                       Lo que pediste
                     </p>
-                    <p className="text-sm text-slate-200 mt-1 leading-snug">{proximaCita.pedidoCliente}</p>
+                    <p className="text-sm text-slate-200 mt-1 leading-snug break-words">{proximaCita.pedidoCliente}</p>
                   </div>
                 )}
                 {citasProximas.length > 1 && (
@@ -573,7 +573,7 @@ export default function ClientView() {
                             {c.barberoNombre}
                           </p>
                           {(c.pedidoCliente ?? '').trim() !== '' && (
-                            <p className="text-xs text-slate-500 mt-2 border-l-2 border-brand-accent/40 pl-2 leading-relaxed">
+                            <p className="text-xs text-slate-500 mt-2 border-l-2 border-brand-accent/40 pl-2 leading-relaxed break-words">
                               <span className="text-slate-600 font-bold uppercase">Pedido: </span>
                               {c.pedidoCliente}
                             </p>
@@ -653,7 +653,7 @@ export default function ClientView() {
                       {c.barberoNombre}
                     </p>
                     {(c.pedidoCliente ?? '').trim() !== '' && (
-                      <p className="text-xs text-slate-500 border-l-2 border-slate-600 pl-2 mt-1">
+                      <p className="text-xs text-slate-500 border-l-2 border-slate-600 pl-2 mt-1 break-words">
                         <span className="text-slate-600 font-bold">Pedido: </span>
                         {c.pedidoCliente}
                       </p>

@@ -372,37 +372,41 @@ export default function AdminCajaDashboard({ readOnly = false }) {
                 {liquidaciones.length === 0 ? (
                   <EmptyState title="Sin liquidaciones" hint="Registra pagos de barberos para que aparezcan aquí." />
                 ) : (
-                  <table className="w-full text-left text-sm min-w-[720px]">
+                  <table className="w-full text-left text-sm">
                     <thead>
                       <tr className="border-b border-slate-700/60 bg-slate-900/80 text-slate-400 uppercase text-xs tracking-wider">
-                        <th className="px-4 py-3 font-bold">Barbero</th>
-                        <th className="px-4 py-3 font-bold">Periodo</th>
-                        <th className="px-4 py-3 font-bold">Fecha pago</th>
-                        <th className="px-4 py-3 font-bold text-right">Monto</th>
-                        {!readOnly ? <th className="px-4 py-3 font-bold w-16 text-right">Acción</th> : null}
+                        <th className="px-2 sm:px-4 py-3 font-bold">Barbero</th>
+                        <th className="px-2 sm:px-4 py-3 font-bold">Periodo</th>
+                        <th className="px-2 sm:px-4 py-3 font-bold hidden sm:table-cell">Fecha pago</th>
+                        <th className="px-2 sm:px-4 py-3 font-bold text-right">Monto</th>
+                        {!readOnly ? <th className="px-2 sm:px-4 py-3 font-bold w-12 sm:w-16 text-right">Acción</th> : null}
                       </tr>
                     </thead>
                     <tbody>
                       {liquidaciones.slice(0, 12).map((li) => (
                         <tr key={li.id} className="border-b border-slate-800/60 hover:bg-slate-800/30 transition-colors">
-                          <td className="px-4 py-3 font-bold text-white">{barberoPorId.get(li.barbero_id) ?? li.barbero_id}</td>
-                          <td className="px-4 py-3 text-slate-300">
-                            {li.fecha_inicio} → {li.fecha_fin}
+                          <td className="px-2 sm:px-4 py-3 font-bold text-white max-w-[80px] sm:max-w-none truncate" title={barberoPorId.get(li.barbero_id) ?? li.barbero_id}>
+                            {barberoPorId.get(li.barbero_id) ?? li.barbero_id}
                           </td>
-                          <td className="px-4 py-3 text-slate-300">{li.fecha_pago}</td>
-                          <td className="px-4 py-3 text-brand-gold font-bold tabular-nums text-right">
+                          <td className="px-2 sm:px-4 py-3 text-slate-300 text-xs sm:text-sm">
+                            <span className="block sm:inline">{li.fecha_inicio}</span>
+                            <span className="hidden sm:inline mx-1 text-slate-500">→</span>
+                            <span className="block sm:inline">{li.fecha_fin}</span>
+                          </td>
+                          <td className="px-2 sm:px-4 py-3 text-slate-300 hidden sm:table-cell">{li.fecha_pago}</td>
+                          <td className="px-2 sm:px-4 py-3 text-brand-gold font-bold tabular-nums text-right">
                             ${Number(li.monto_pagado).toFixed(2)}
                           </td>
                           {!readOnly ? (
-                            <td className="px-4 py-3 text-right">
-                              <button
+                            <td className="px-2 sm:px-4 py-3 text-right">
+                               <button
                                 type="button"
                                 onClick={() => setDeleteTarget(li)}
                                 disabled={saving}
-                                className="p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-red-400 border border-slate-600/80 disabled:opacity-50"
+                                className="p-1.5 sm:p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-red-400 border border-slate-600/80 disabled:opacity-50"
                                 aria-label="Eliminar liquidación"
                               >
-                                <Trash2 size={18} />
+                                <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />
                               </button>
                             </td>
                           ) : null}
@@ -417,9 +421,9 @@ export default function AdminCajaDashboard({ readOnly = false }) {
                 <p className="text-sm font-bold text-white">Total por barbero (rango seleccionado)</p>
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {liquidacionResumenPorBarbero.slice(0, 6).map((it) => (
-                    <div key={it.nombre} className="bg-slate-900/50 border border-slate-700/40 rounded-xl p-3">
-                      <p className="text-sm font-bold text-white truncate">{it.nombre}</p>
-                      <p className="text-brand-gold font-black text-xl tabular-nums">${it.total.toFixed(2)}</p>
+                    <div key={it.nombre} className="bg-slate-900/50 border border-slate-700/40 rounded-xl p-3 min-w-0">
+                      <p className="text-sm font-bold text-white break-words">{it.nombre}</p>
+                      <p className="text-brand-gold font-black text-lg sm:text-xl tabular-nums break-all">${it.total.toFixed(2)}</p>
                     </div>
                   ))}
                 </div>
@@ -517,23 +521,23 @@ export default function AdminCajaDashboard({ readOnly = false }) {
                   <EmptyState title="Sin datos del resumen" hint="Registra citas completadas y/o ventas y gastos para ver la gráfica." />
                 ) : (
                   <>
-                    <div className="mt-4 grid grid-cols-1 sm:grid-cols-4 gap-3">
-                      <div className="bg-slate-900/50 border border-slate-700/40 rounded-xl p-3">
-                        <p className="text-xs text-slate-500 font-bold">Ingresos (bruto)</p>
-                        <p className="text-brand-gold font-black text-xl tabular-nums">${resumenLatest.ingresos_brutos.toFixed(2)}</p>
+                    <div className="mt-4 flex flex-col gap-3">
+                      <div className="bg-slate-900/50 border border-slate-700/40 rounded-xl p-3 flex items-center justify-between gap-4">
+                        <p className="text-sm text-slate-500 font-bold">Ingresos (bruto)</p>
+                        <p className="text-brand-gold font-black text-lg tabular-nums text-right break-all">${resumenLatest.ingresos_brutos.toFixed(2)}</p>
                       </div>
-                      <div className="bg-slate-900/50 border border-slate-700/40 rounded-xl p-3">
-                        <p className="text-xs text-slate-500 font-bold">Comisiones barberos</p>
-                        <p className="text-emerald-300 font-black text-xl tabular-nums">${resumenLatest.total_comisiones_barberos.toFixed(2)}</p>
+                      <div className="bg-slate-900/50 border border-slate-700/40 rounded-xl p-3 flex items-center justify-between gap-4">
+                        <p className="text-sm text-slate-500 font-bold">Comisiones barberos</p>
+                        <p className="text-emerald-300 font-black text-lg tabular-nums text-right break-all">${resumenLatest.total_comisiones_barberos.toFixed(2)}</p>
                       </div>
-                      <div className="bg-slate-900/50 border border-slate-700/40 rounded-xl p-3">
-                        <p className="text-xs text-slate-500 font-bold">Gastos</p>
-                        <p className="text-red-300 font-black text-xl tabular-nums">${resumenLatest.total_gastos_operativos.toFixed(2)}</p>
+                      <div className="bg-slate-900/50 border border-slate-700/40 rounded-xl p-3 flex items-center justify-between gap-4">
+                        <p className="text-sm text-slate-500 font-bold">Gastos</p>
+                        <p className="text-red-300 font-black text-lg tabular-nums text-right break-all">${resumenLatest.total_gastos_operativos.toFixed(2)}</p>
                       </div>
-                      <div className="bg-slate-900/50 border border-slate-700/40 rounded-xl p-3">
-                        <p className="text-xs text-slate-500 font-bold">Utilidad neta</p>
+                      <div className="bg-slate-900/50 border border-slate-700/40 rounded-xl p-3 flex items-center justify-between gap-4">
+                        <p className="text-sm text-slate-500 font-bold">Utilidad neta</p>
                         <p
-                          className={`font-black text-xl tabular-nums ${
+                          className={`font-black text-lg tabular-nums text-right break-all ${
                             resumenLatest.utilidad_neta >= 0 ? 'text-emerald-300' : 'text-red-300'
                           }`}
                         >

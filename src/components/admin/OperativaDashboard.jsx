@@ -538,17 +538,20 @@ export default function OperativaDashboard({ readOnly = false }) {
                       <div key={h.dia_semana} className="bg-slate-900/50 border border-slate-700/40 rounded-xl p-3">
                         <div className="flex items-center justify-between gap-2">
                           <p className="text-sm font-black text-white">{DIAS_SEMANA[h.dia_semana]}</p>
-                          <label className="flex items-center gap-2 cursor-pointer select-none">
-                            <input
-                              type="checkbox"
-                              checked={h.activo}
-                              onChange={(e) =>
-                                setHorarios((prev) => prev.map((x) => (x.dia_semana === h.dia_semana ? { ...x, activo: e.target.checked } : x)))
-                              }
-                              disabled={readOnly}
-                              className="rounded border-slate-500 text-brand-gold focus:ring-brand-gold/50"
-                            />
-                            <span className="text-xs font-bold text-slate-300">{h.activo ? 'Activo' : 'Inactivo'}</span>
+                          <label className="flex items-center gap-2 cursor-pointer select-none relative group">
+                            <div className="relative flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={h.activo}
+                                onChange={(e) =>
+                                  setHorarios((prev) => prev.map((x) => (x.dia_semana === h.dia_semana ? { ...x, activo: e.target.checked } : x)))
+                                }
+                                disabled={readOnly}
+                                className="sr-only peer"
+                              />
+                              <div className="w-9 h-5 bg-slate-700/80 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 peer-checked:after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-gold/80 shadow-inner border border-slate-600/50 peer-checked:border-brand-gold/50 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-brand-gold/50 peer-disabled:opacity-50"></div>
+                            </div>
+                            <span className="text-xs font-bold text-slate-300 group-hover:text-white transition-colors">{h.activo ? 'Activo' : 'Inactivo'}</span>
                           </label>
                         </div>
                         <div className="mt-3 grid grid-cols-2 gap-2">
@@ -593,14 +596,20 @@ export default function OperativaDashboard({ readOnly = false }) {
                       Citas por barbero
                     </p>
                     <div className="flex flex-wrap items-center gap-3">
-                      <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          checked={filtrarColumnasPorDia}
-                          onChange={(e) => setFiltrarColumnasPorDia(e.target.checked)}
-                          className="rounded border-slate-500 text-brand-gold focus:ring-brand-gold/50"
-                        />
-                        <span className="font-bold">Solo un día</span>
+                      {/* NUEVO CÓDIGO CON ESTILO SWITCH */}
+                      <label className="flex items-center gap-2 cursor-pointer select-none group">
+                        <div className="relative flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={filtrarColumnasPorDia}
+                            onChange={(e) => setFiltrarColumnasPorDia(e.target.checked)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-9 h-5 bg-slate-700/80 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 peer-checked:after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-gold/80 shadow-inner border border-slate-600/50 peer-checked:border-brand-gold/50 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-brand-gold/50"></div>
+                        </div>
+                        <span className="text-xs font-bold text-slate-300 group-hover:text-white transition-colors">
+                          Solo un día
+                        </span>
                       </label>
                       <label className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wide">
                         <CalendarDays size={16} className="text-brand-gold shrink-0" aria-hidden />
@@ -861,56 +870,55 @@ export default function OperativaDashboard({ readOnly = false }) {
                             const nombreCliente = nombreClienteParaTarjeta(c);
                             const fechaTarjeta = fechaCitaParaTarjeta(c);
                             return (
-                            <div key={c.cita_id} className="bg-slate-900/50 border border-slate-700/40 rounded-xl p-4">
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0">
-                                  <p className="text-sm font-bold text-white">
-                                    {nombreCliente}{' '}
-                                    <span className="text-slate-500 font-semibold">·</span> {c.servicios || 'Servicio'}
-                                  </p>
-                                  <p className="text-xs text-slate-400 mt-1">
-                                    {fechaTarjeta} · {horaCita} · {c.barbero_nombre}
-                                  </p>
+                              <div key={c.cita_id} className="bg-slate-900/50 border border-slate-700/40 rounded-xl p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-bold text-white break-words">
+                                      {nombreCliente}{' '}
+                                      <span className="text-slate-500 font-semibold">·</span> {c.servicios || 'Servicio'}
+                                    </p>
+                                    <p className="text-xs text-slate-400 mt-1">
+                                      {fechaTarjeta} · {horaCita} · {c.barbero_nombre}
+                                    </p>
+                                  </div>
+                                  <div className="flex flex-col items-end gap-2">
+                                    <span
+                                      className={`text-[11px] font-black uppercase px-2 py-1 rounded-lg border ${c.estado === 'COMPLETADA'
+                                          ? 'border-emerald-500/30 text-emerald-300 bg-emerald-500/10'
+                                          : c.estado === 'CANCELADA' || c.estado === 'NO_ASISTIO'
+                                            ? 'border-red-500/30 text-red-300 bg-red-500/10'
+                                            : 'border-slate-600 text-slate-300 bg-slate-900/30'
+                                        }`}
+                                    >
+                                      {c.estado}
+                                    </span>
+                                    <span className="text-sm font-black text-brand-gold tabular-nums">
+                                      ${Number(c.monto).toFixed(2)}
+                                    </span>
+                                  </div>
                                 </div>
-                                <div className="flex flex-col items-end gap-2">
-                                  <span
-                                    className={`text-[11px] font-black uppercase px-2 py-1 rounded-lg border ${
-                                      c.estado === 'COMPLETADA'
-                                        ? 'border-emerald-500/30 text-emerald-300 bg-emerald-500/10'
-                                        : c.estado === 'CANCELADA' || c.estado === 'NO_ASISTIO'
-                                          ? 'border-red-500/30 text-red-300 bg-red-500/10'
-                                          : 'border-slate-600 text-slate-300 bg-slate-900/30'
-                                    }`}
-                                  >
-                                    {c.estado}
-                                  </span>
-                                  <span className="text-sm font-black text-brand-gold tabular-nums">
-                                    ${Number(c.monto).toFixed(2)}
-                                  </span>
-                                </div>
-                              </div>
 
-                              {c.estado === 'PENDIENTE' && !readOnly && (
-                                <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => applyCitaEstado(c.cita_id, 'COMPLETADA')}
-                                    disabled={saving}
-                                    className="px-4 py-2 bg-brand-gold text-brand-dark font-bold rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50 shadow-lg shadow-amber-900/20"
-                                  >
-                                    <CheckCircle2 size={16} className="inline-block" aria-hidden /> Completar
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => setEstadoConfirm({ id: c.cita_id, nextEstado: 'CANCELADA' })}
-                                    disabled={saving}
-                                    className="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-lg hover:text-red-400 border border-slate-600/80 disabled:opacity-50"
-                                  >
-                                    <X size={16} className="inline-block" aria-hidden /> Cancelar
-                                  </button>
-                                </div>
-                              )}
-                            </div>
+                                {c.estado === 'PENDIENTE' && !readOnly && (
+                                  <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => applyCitaEstado(c.cita_id, 'COMPLETADA')}
+                                      disabled={saving}
+                                      className="px-4 py-2 bg-brand-gold text-brand-dark font-bold rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50 shadow-lg shadow-amber-900/20"
+                                    >
+                                      <CheckCircle2 size={16} className="inline-block" aria-hidden /> Completar
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setEstadoConfirm({ id: c.cita_id, nextEstado: 'CANCELADA' })}
+                                      disabled={saving}
+                                      className="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-lg hover:text-red-400 border border-slate-600/80 disabled:opacity-50"
+                                    >
+                                      <X size={16} className="inline-block" aria-hidden /> Cancelar
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
                             );
                           })}
                           {filteredCitas.length > 20 && (
