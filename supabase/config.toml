@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.crear-cliente]
 verify_jwt = false
+
+[functions.verify-captcha]
+verify_jwt = false

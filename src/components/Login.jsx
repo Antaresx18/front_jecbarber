@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import ReCAPTCHA from 'react-google-recaptcha';
+
+
 import {
   Lock,
   User as UserIcon,
@@ -53,6 +56,9 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(/** @type {LoginErrorState} */ (null));
   const [fieldErrors, setFieldErrors] = useState({ email: null, password: null });
+  const [captchaToken, setCaptchaToken] = useState(/** @type {string | null} */ (null));
+  const turnstileRef = useRef(null);
+
 
   // Registro
   const [regNombre, setRegNombre] = useState('');
@@ -190,13 +196,40 @@ export default function Login() {
 
     setIsLoading(true);
     try {
+      // 1. Verify reCAPTCHA token via Edge Function
+      if (!captchaToken) {
+        setError({ message: 'Por favor, completa el captcha.' });
+        setIsLoading(false);
+        return;
+      }
+
+      const { data: verificationData, error: verificationError } = await supabase.functions.invoke(
+        'verify-captcha',
+        {
+          body: { token: captchaToken },
+        }
+      );
+
+      if (verificationError || !verificationData.success) {
+        setError({ message: 'La verificación del captcha falló. Inténtalo de nuevo.' });
+        setIsLoading(false);
+        turnstileRef.current?.reset();
+        setCaptchaToken(null);
+        return;
+      }
+
       let signInResult;
+
       try {
         signInResult = await promiseWithTimeout(
           supabase.auth.signInWithPassword({
             email: email.trim(),
             password,
+            options: {
+              captchaToken: captchaToken || undefined,
+            },
           }),
+
           AUTH_SIGNIN_MS,
           'AUTH_SIGNIN_TIMEOUT'
         );
@@ -268,6 +301,9 @@ export default function Login() {
       });
     } finally {
       setIsLoading(false);
+      // Reset captcha after attempt
+      turnstileRef.current?.reset();
+      setCaptchaToken(null);
     }
   };
 
@@ -726,10 +762,21 @@ export default function Login() {
                 </div>
               </div>
 
+              <div className="flex justify-center my-4 overflow-hidden rounded-xl">
+                <ReCAPTCHA
+                  ref={turnstileRef}
+                  sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
+                  onChange={(token) => setCaptchaToken(token)}
+                  onExpired={() => setCaptchaToken(null)}
+                  theme="dark"
+                />
+              </div>
+
+
               <button
                 type="submit"
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 text-brand-dark font-black text-lg py-4 rounded-xl transition-all disabled:opacity-70 disabled:hover:translate-y-0 shadow-lg hover:-translate-y-1 bg-brand-gold hover:shadow-[0_0_30px_rgba(234,179,8,0.4)]"
+                disabled={isLoading || !captchaToken}
+                className="w-full flex items-center justify-center gap-2 text-brand-dark font-black text-lg py-4 rounded-xl transition-all disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed shadow-lg hover:-translate-y-1 bg-brand-gold hover:shadow-[0_0_30px_rgba(234,179,8,0.4)]"
               >
                 {isLoading ? (
                   <>
