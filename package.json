@@ -13,9 +13,11 @@
     "test:run": "vitest run",
     "format": "prettier --write \"src/**/*.{js,jsx,css}\" \"*.{js,json,html}\"",
     "supabase:deploy:crear-cliente": "supabase functions deploy crear-cliente",
-    "supabase:deploy:crear-barbero": "supabase functions deploy crear-barbero"
+    "supabase:deploy:crear-barbero": "supabase functions deploy crear-barbero",
+    "supabase:deploy:verify-captcha": "supabase functions deploy verify-captcha"
   },
   "dependencies": {
+    "@hcaptcha/react-hcaptcha": "^2.0.2",
     "@supabase/supabase-js": "^2.99.3",
     "@tailwindcss/postcss": "^4.2.2",
     "lucide-react": "^0.577.0",

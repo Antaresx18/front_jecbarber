@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
-const RECAPTCHA_SECRET_KEY = Deno.env.get('RECAPTCHA_SECRET_KEY')
+const HCAPTCHA_SECRET_KEY = Deno.env.get('HCAPTCHA_SECRET_KEY')
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,10 +23,10 @@ serve(async (req) => {
       )
     }
 
-    const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+    const response = await fetch('https://api.hcaptcha.com/siteverify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `secret=${RECAPTCHA_SECRET_KEY}&response=${token}`,
+      body: `secret=${HCAPTCHA_SECRET_KEY}&response=${token}`,
     })
 
     const data = await response.json()

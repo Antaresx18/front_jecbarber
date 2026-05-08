@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import ReCAPTCHA from 'react-google-recaptcha';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 
 
 import {
@@ -763,11 +763,11 @@ export default function Login() {
               </div>
 
               <div className="flex justify-center my-4 overflow-hidden rounded-xl">
-                <ReCAPTCHA
+                <HCaptcha
                   ref={turnstileRef}
-                  sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
-                  onChange={(token) => setCaptchaToken(token)}
-                  onExpired={() => setCaptchaToken(null)}
+                  sitekey={import.meta.env.VITE_HCAPTCHA_SITE_KEY}
+                  onVerify={(token) => setCaptchaToken(token)}
+                  onExpire={() => setCaptchaToken(null)}
                   theme="dark"
                 />
               </div>
