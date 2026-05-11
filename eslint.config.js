@@ -34,5 +34,11 @@ export default defineConfig([
       globals: { ...globals.browser, ...globals.vitest },
     },
   },
+  {
+    files: ['vite.config.js', 'postcss.config.js', 'eslint.config.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
   eslintConfigPrettier,
 ]);

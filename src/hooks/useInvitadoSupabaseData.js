@@ -30,6 +30,18 @@ function withTimeout(ms, promise) {
   ]);
 }
 
+/** Reintenta una función asíncrona si falla (ej. error de red). */
+async function fetchWithRetries(fn, retries = 2, delay = 1000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (i === retries - 1) throw err;
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+}
+
 /** @param {Record<string, unknown>[]} local */
 /** @param {Record<string, unknown>[]} server */
 function mergeCitasById(local, server) {

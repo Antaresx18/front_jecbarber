@@ -1,4 +1,6 @@
+// @ts-ignore
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+// @ts-ignore
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const corsHeaders: Record<string, string> = {
@@ -25,7 +27,8 @@ type Body = {
   activo?: boolean;
 };
 
-Deno.serve(async (req) => {
+// @ts-ignore
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -34,10 +37,12 @@ Deno.serve(async (req) => {
     return json({ error: "Método no permitido", code: "METHOD" }, 405);
   }
 
+  // @ts-ignore
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   /** Supabase inyecta SUPABASE_SERVICE_ROLE_KEY; SERVICE_ROLE_KEY es alias por si lo definiste a mano. */
-  const serviceRoleKey =
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SERVICE_ROLE_KEY");
+  // @ts-ignore
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SERVICE_ROLE_KEY");
+  // @ts-ignore
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
 
   if (!supabaseUrl || !serviceRoleKey || !anonKey) {
