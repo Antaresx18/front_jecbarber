@@ -1,4 +1,6 @@
+// @ts-ignore
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+// @ts-ignore
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 /**
@@ -49,8 +51,10 @@ async function notifySpringBootIfConfigured(payload: {
   nombre: string;
   email: string;
 }): Promise<void> {
+  // @ts-ignore
   const url = Deno.env.get("SPRING_CLIENTE_WEBHOOK_URL")?.trim();
   if (!url) return;
+  // @ts-ignore
   const secret = Deno.env.get("SPRING_WEBHOOK_SECRET")?.trim();
   try {
     const headers: Record<string, string> = {
@@ -74,7 +78,8 @@ async function notifySpringBootIfConfigured(payload: {
   }
 }
 
-Deno.serve(async (req) => {
+// @ts-ignore
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -83,9 +88,11 @@ Deno.serve(async (req) => {
     return json({ error: "Método no permitido", code: "METHOD" }, 405);
   }
 
+  // @ts-ignore
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey =
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SERVICE_ROLE_KEY");
+  // @ts-ignore
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SERVICE_ROLE_KEY");
+  // @ts-ignore
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
 
   if (!supabaseUrl || !serviceRoleKey || !anonKey) {
@@ -217,7 +224,7 @@ Deno.serve(async (req) => {
     clienteId = clienteRow.id;
 
     await notifySpringBootIfConfigured({
-      cliente_id: clienteId,
+      cliente_id: clienteId as string,
       nombre,
       email,
     });
