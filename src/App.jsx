@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import AdminDashboard from './components/AdminDashboard';
+import OperativaDashboard from './components/admin/OperativaDashboard';
 import GestionServicios from './components/admin/GestionServicios';
 import GestionBarberos from './components/admin/GestionBarberos';
 import GestionClientes from './components/admin/GestionClientes';
@@ -50,7 +50,7 @@ export default function App() {
       >
         <Route index element={<Navigate to="inicio" replace />} />
         <Route path="inicio" element={<AdminInicioDashboard />} />
-        <Route path="operativa" element={<AdminDashboard readOnly={adminReadOnly} />} />
+        <Route path="operativa" element={<OperativaDashboard readOnly={adminReadOnly} />} />
         <Route path="agenda" element={<Agenda readOnly={adminReadOnly} />} />
         <Route path="ventas" element={<AdminVentasDashboard readOnly={adminReadOnly} />} />
         <Route path="caja" element={<AdminCajaDashboard readOnly={adminReadOnly} />} />
